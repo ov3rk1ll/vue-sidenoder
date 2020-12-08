@@ -1,0 +1,69 @@
+{
+  "name": "vue-sidenoder",
+  "version": "0.1.0",
+  "private": true,
+  "author": {
+    "name": "ov3rk1ll",
+    "email": "me@ov3rk1l.dev",
+    "url": "https://ov3rk1l.dev"
+  },
+  "homepage": "https://ov3rk1l.dev",
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint",
+    "electron:build": "vue-cli-service electron:build",
+    "electron:build:all": "npm run electron:build -- --linux deb --win nsis",
+    "electron:serve": "vue-cli-service electron:serve",
+    "postinstall": "electron-builder install-app-deps",
+    "postuninstall": "electron-builder install-app-deps",
+    "electron:generate-icons": "electron-icon-builder --input=./public/icon.png --output=build --flatten"
+  },
+  "main": "background.js",
+  "dependencies": {
+    "adbkit": "^2.11.1",
+    "bootstrap": "^4.5.3",
+    "bootstrap-vue": "^2.20.1",
+    "bootswatch": "^4.5.3",
+    "command-exists": "^1.2.9",
+    "core-js": "^3.6.5",
+    "node-fetch": "^2.6.1",
+    "vue": "^2.6.12",
+    "vue-router": "^3.2.0"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "~4.5.0",
+    "@vue/cli-plugin-eslint": "~4.5.0",
+    "@vue/cli-plugin-router": "~4.5.0",
+    "@vue/cli-service": "~4.5.0",
+    "babel-eslint": "^10.1.0",
+    "electron": "^9.0.0",
+    "electron-devtools-installer": "^3.1.0",
+    "electron-icon-builder": "^1.0.2",
+    "eslint": "^6.7.2",
+    "eslint-plugin-vue": "^6.2.2",
+    "node-sass": "^5.0.0",
+    "sass-loader": "^10.1.0",
+    "vue-cli-plugin-electron-builder": "~2.0.0-rc.5",
+    "vue-template-compiler": "^2.6.11"
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "node": true
+    },
+    "extends": [
+      "plugin:vue/essential",
+      "eslint:recommended"
+    ],
+    "parserOptions": {
+      "parser": "babel-eslint"
+    },
+    "rules": {}
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}

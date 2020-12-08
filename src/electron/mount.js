@@ -1,0 +1,225 @@
+import { ipcMain } from "electron";
+import { writeFileSync } from "fs";
+import fetch from "node-fetch";
+import path from "path";
+import { tmpdir } from "os";
+import { exec } from "child_process";
+
+// import globals from "./globals";
+import { check, list as rcloneList } from "./rclone";
+import { execShellCommand } from "..//utils/shell";
+
+import globals from "./globals";
+
+ipcMain.on("check_mount", async (event) => {
+  if (await check()) {
+    event.reply("check_mount", {
+      success: true,
+      value: "Connected",
+    });
+  } else {
+    connectMount(event);
+  }
+});
+
+async function connectMount(event) {
+  try {
+    let key = await fetch(
+      "https://raw.githubusercontent.com/whitewhidow/quest-sideloader-linux/main/extras/k"
+    )
+      .then((resp) => resp.text())
+      .then((content) => Buffer.from(content, "base64").toString("ascii"));
+
+    const kpath = path.join(tmpdir(), "k");
+    console.log(kpath);
+    writeFileSync(kpath, key);
+
+    let config = await fetch(
+      "https://raw.githubusercontent.com/whitewhidow/quest-sideloader-linux/main/extras/c"
+    )
+      .then((resp) => resp.text())
+      .then((content) => Buffer.from(content, "base64").toString("ascii"));
+
+    config = config.replace("XXX", kpath);
+    const cpath = path.join(tmpdir(), "c");
+    writeFileSync(cpath, config);
+
+    console.log("connectMount files ready", kpath, cpath);
+    exec(`rclone rcd --rc-no-auth --config ${cpath}`);
+
+    event.reply("check_mount", {
+      success: true,
+      value: "Connected",
+    });
+  } catch (err) {
+    console.log("connectMount", err);
+  }
+}
+
+async function list(dir) {
+  if (dir === "/") {
+    dir = "";
+  }
+  console.log("list:", '"' + dir + '"');
+
+  let list = await rcloneList(dir);
+  const installedApps = dir === "" ? await getInstalledApps() : {};
+
+  list = parseList(dir, list, installedApps);
+  return list;
+}
+
+function parseList(folder, items, installedApps) {
+  const list = [];
+  for (const item of items) {
+    if (item.Path.startsWith(".") || !item.IsDir) {
+      continue;
+    }
+
+    const entry = {
+      name: item.Name,
+      simpleName: item.Name,
+      IsDir: item.IsDir,
+      imagePath: null,
+      versionCode: null,
+      versionName: null,
+      installedVersion: -1,
+      packageName: null,
+      mp: false,
+      na: false,
+      infoLink: null,
+      info: null,
+      createdAt: new Date(item.ModTime),
+      filePath: path.join(folder, item.Path).replace(/\\/g, "/"),
+    };
+
+    if (new RegExp(".* -steam-").test(item.Name)) {
+      const steamid = item.Name.match(/-steam-([0-9]*)/)[1];
+      entry.simpleName = entry.simpleName.split(" -steam-")[0];
+      entry.imagePath =
+        "https://cdn.cloudflare.steamstatic.com/steam/apps/" +
+        steamid +
+        "/header.jpg?t=" +
+        Date.now();
+      entry.infoLink = "https://store.steampowered.com/app/" + steamid + "/";
+    }
+    if (new RegExp(".* -oculus-").test(item.Name)) {
+      // TODO: Better image for oculusid
+      const oculusid = item.Name.match(/-oculus-([0-9]*)/)[1];
+      entry.simpleName = entry.simpleName.split(" -oculus-")[0];
+      entry.imagePath = "https://vrdb.app/oculus/images/" + oculusid + ".jpg";
+      entry.infoLink =
+        "https://www.oculus.com/experiences/quest/" + oculusid + "/";
+    }
+    if (new RegExp(".* -versionCode-").test(item.Name)) {
+      //oculusid = fileEnt.name.split('oculus-')[1]
+      entry.versionCode = item.Name.match(/-versionCode-([0-9]*)/)[1];
+      entry.simpleName = entry.simpleName.split(" -versionCode-")[0];
+    }
+    if (new RegExp(".* -packageName-").test(item.Name)) {
+      entry.packageName = item.Name.match(/-packageName-([a-zA-Z.]*)/)[1];
+      entry.simpleName = entry.simpleName.split(" -packageName-")[0];
+    }
+
+    if (new RegExp(".* -MP-").test(item.Name)) {
+      entry.mp = true;
+    }
+
+    if (new RegExp(".* -NA-").test(item.Name)) {
+      entry.na = true;
+    }
+
+    entry.simpleName = cleanUpFoldername(entry.simpleName);
+
+    if (!entry.imagePath) {
+      entry.imagePath = `https://dummyimage.com/460x215/000/fff.jpg&text=${entry.simpleName}`;
+    }
+
+    // Check if installed
+    if (installedApps[entry.packageName]) {
+      entry.installedVersion = installedApps[entry.packageName].versionCode;
+    }
+
+    list.push(entry);
+  }
+
+  return list;
+}
+
+ipcMain.on("ls_dir", async (event, args) => {
+  event.reply("ls_dir", {
+    success: true,
+    value: await list(args.path),
+  });
+});
+
+ipcMain.on("check_folder", async (event, args) => {
+  const files = await rcloneList(args.path, { recurse: true });
+
+  let totalSize = 0;
+  for (const file of files) {
+    if (file.IsDir) continue;
+    totalSize += file.Size;
+  }
+
+  const apkFiles = files.filter(
+    (x) => x.MimeType === "application/vnd.android.package-archive"
+  );
+  if (apkFiles.length === 0 || apkFiles.length > 1) {
+    event.reply("check_folder", {
+      success: false,
+      error:
+        "Unexpected number of APK files in folder (was " +
+        apkFiles.length +
+        ")",
+    });
+    return;
+  }
+  const hasFolders = files.filter((x) => x.IsDir).length > 0;
+
+  event.reply("check_folder", {
+    success: true,
+    value: { path: args.path, apk: apkFiles[0], hasObb: hasFolders, totalSize },
+  });
+});
+
+function cleanUpFoldername(simpleName) {
+  simpleName = simpleName.split("-QuestUnderground")[0];
+  simpleName = simpleName.split(/v[0-9]*\./)[0];
+  //simpleName = simpleName.split(/v[0-9][0-9]\./)[0]
+  //simpleName = simpleName.split(/v[0-9][0-9][0-9]\./)[0]
+  simpleName = simpleName.split(/\[[0-9]*\./)[0];
+  simpleName = simpleName.split(/\[[0-9]*\]/)[0];
+
+  return simpleName;
+}
+
+ipcMain.on("get_installed_apps", async (event) => {
+  event.reply("get_installed_apps", {
+    success: true,
+    value: await getInstalledApps(),
+  });
+});
+
+async function getInstalledApps() {
+  console.log("getInstalledApps from", globals.device);
+  const apps = await globals.adb.getPackages(globals.device.id); // execShellCommand(`adb shell cmd package list packages -3`);
+
+  const appInfo = {};
+
+  for (const app of apps) {
+    const info = await execShellCommand(`adb shell dumpsys package ${app}`);
+    // const path = await execShellCommand(`adb shell pm path ${app}`).slice(8);
+
+    const versionCode = info.match(/versionCode=[0-9]*/)[0].slice(12);
+
+    // TODO: Read name for installed app list
+    appInfo[app] = {
+      packageName: app,
+      versionCode,
+      debug: info.match(/ DEBUGGABLE /) !== null,
+    };
+  }
+
+  return appInfo;
+}
