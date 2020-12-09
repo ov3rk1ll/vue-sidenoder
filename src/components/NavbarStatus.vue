@@ -35,9 +35,7 @@ export default {
   },
   mounted: function() {
     this.$nextTick(function() {
-      console.log("register for " + this.event);
       ipcRenderer.on(this.event, (e, args) => {
-        console.log("event", args);
         this.loading = false;
         this.text = args.value;
         this.status = args.success ? "success" : "danger";
@@ -48,7 +46,6 @@ export default {
   },
   methods: {
     checkStatus: function() {
-      console.log("trigger", this.event);
       this.status = "info";
       this.text = "Checking...";
       this.loading = true;

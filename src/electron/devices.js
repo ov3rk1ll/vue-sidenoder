@@ -4,7 +4,6 @@ import globals from "./globals";
 
 ipcMain.on("check_device", (event) => {
   globals.adb.listDevices().then((devices) => {
-    console.log("listDevices", devices);
     if (devices == null || devices.length == 0) {
       event.reply("check_device", {
         success: false,

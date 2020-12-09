@@ -7,8 +7,7 @@ export async function check() {
     const resp = await fetch("http://127.0.0.1:5572/rc/noop", {
       method: "post",
     });
-    console.log("check", resp.ok);
-    return true;
+    return resp.ok;
   } catch (e) {
     return false;
   }

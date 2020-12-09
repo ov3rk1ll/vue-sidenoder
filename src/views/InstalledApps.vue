@@ -18,7 +18,6 @@ export default {
   mounted: function() {
     this.$nextTick(function() {
       ipcRenderer.on("get_installed_apps", (e, args) => {
-        console.log(args);
         this.items = args.value;
         this.loading = false;
       });
