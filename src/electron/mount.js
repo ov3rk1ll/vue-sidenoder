@@ -31,7 +31,6 @@ async function connectMount(event) {
       .then((content) => Buffer.from(content, "base64").toString("ascii"));
 
     const kpath = path.join(tmpdir(), "k");
-    console.log(kpath);
     writeFileSync(kpath, key);
 
     let config = await fetch(
@@ -44,7 +43,6 @@ async function connectMount(event) {
     const cpath = path.join(tmpdir(), "c");
     writeFileSync(cpath, config);
 
-    console.log("connectMount files ready", kpath, cpath);
     exec(`rclone rcd --rc-no-auth --config ${cpath}`);
 
     event.reply("check_mount", {
@@ -52,7 +50,7 @@ async function connectMount(event) {
       value: "Connected",
     });
   } catch (err) {
-    console.log("connectMount", err);
+    console.log("Error in connectMount", err);
   }
 }
 
@@ -60,7 +58,6 @@ async function list(dir) {
   if (dir === "/") {
     dir = "";
   }
-  console.log("list:", '"' + dir + '"');
 
   let list = await rcloneList(dir);
   const installedApps = dir === "" ? await getInstalledApps() : {};
@@ -147,10 +144,19 @@ function parseList(folder, items, installedApps) {
 }
 
 ipcMain.on("ls_dir", async (event, args) => {
-  event.reply("ls_dir", {
-    success: true,
-    value: await list(args.path),
-  });
+  try {
+    const items = await list(args.path);
+    event.reply("ls_dir", {
+      success: true,
+      value: items
+    });
+  } catch (e) {
+    event.reply("ls_dir", {
+      success: false,
+      error: e
+    });
+  }
+
 });
 
 ipcMain.on("check_folder", async (event, args) => {
@@ -202,23 +208,33 @@ ipcMain.on("get_installed_apps", async (event) => {
 });
 
 async function getInstalledApps() {
-  console.log("getInstalledApps from", globals.device);
+  if (!globals.device) {
+    return {};
+  }
   const apps = await globals.adb.getPackages(globals.device.id); // execShellCommand(`adb shell cmd package list packages -3`);
 
   const appInfo = {};
 
   for (const app of apps) {
-    const info = await execShellCommand(`adb shell dumpsys package ${app}`);
-    // const path = await execShellCommand(`adb shell pm path ${app}`).slice(8);
+    try {
+      const info = await execShellCommand(`adb shell dumpsys package ${app}`);
+      // const path = await execShellCommand(`adb shell pm path ${app}`).slice(8);
 
-    const versionCode = info.match(/versionCode=[0-9]*/)[0].slice(12);
+      const versionCode = info.match(/versionCode=[0-9]*/)[0].slice(12);
 
-    // TODO: Read name for installed app list
-    appInfo[app] = {
-      packageName: app,
-      versionCode,
-      debug: info.match(/ DEBUGGABLE /) !== null,
-    };
+      // TODO: Read name for installed app list
+      appInfo[app] = {
+        packageName: app,
+        versionCode,
+        debug: info.match(/ DEBUGGABLE /) !== null,
+      };
+    } catch (e) {
+      appInfo[app] = {
+        packageName: app,
+        versionCode: null,
+        debug: false,
+      };
+    }
   }
 
   return appInfo;
