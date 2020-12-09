@@ -7,9 +7,7 @@ import { exec } from "child_process";
 
 // import globals from "./globals";
 import { check, list as rcloneList } from "./rclone";
-import { execShellCommand } from "..//utils/shell";
-
-import globals from "./globals";
+import { getInstalledApps } from "./devices";
 
 ipcMain.on("check_mount", async (event) => {
   if (await check()) {
@@ -148,15 +146,14 @@ ipcMain.on("ls_dir", async (event, args) => {
     const items = await list(args.path);
     event.reply("ls_dir", {
       success: true,
-      value: items
+      value: items,
     });
   } catch (e) {
     event.reply("ls_dir", {
       success: false,
-      error: e
+      error: e,
     });
   }
-
 });
 
 ipcMain.on("check_folder", async (event, args) => {
@@ -207,35 +204,4 @@ ipcMain.on("get_installed_apps", async (event) => {
   });
 });
 
-async function getInstalledApps() {
-  if (!globals.device) {
-    return {};
-  }
-  const apps = await globals.adb.getPackages(globals.device.id); // execShellCommand(`adb shell cmd package list packages -3`);
 
-  const appInfo = {};
-
-  for (const app of apps) {
-    try {
-      const info = await execShellCommand(`adb shell dumpsys package ${app}`);
-      // const path = await execShellCommand(`adb shell pm path ${app}`).slice(8);
-
-      const versionCode = info.match(/versionCode=[0-9]*/)[0].slice(12);
-
-      // TODO: Read name for installed app list
-      appInfo[app] = {
-        packageName: app,
-        versionCode,
-        debug: info.match(/ DEBUGGABLE /) !== null,
-      };
-    } catch (e) {
-      appInfo[app] = {
-        packageName: app,
-        versionCode: null,
-        debug: false,
-      };
-    }
-  }
-
-  return appInfo;
-}

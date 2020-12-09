@@ -1,8 +1,10 @@
 "use strict";
+/* global __static */
 
 import { app, protocol, BrowserWindow, Menu } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
+import path from "path";
 import adbkit from "adbkit";
 const isDevelopment = process.env.NODE_ENV !== "production";
 
@@ -29,6 +31,7 @@ async function createWindow() {
       // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
       nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
     },
+    icon: path.join(__static, "icon.png"),
   });
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {

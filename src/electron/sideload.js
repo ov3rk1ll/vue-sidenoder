@@ -151,17 +151,17 @@ ipcMain.on("sideload_folder", async (event, args) => {
       true,
       false,
       "Downloading files - " +
-        data.percentage +
-        "% (" +
-        formatBytes(data.bytes) +
-        " / " +
-        formatBytes(data.size) +
-        ")" +
-        " - " +
-        formatBytes(data.speedAvg) +
-        "/s" +
-        " - " +
-        formatEta(data.eta)
+      data.percentage +
+      "% (" +
+      formatBytes(data.bytes) +
+      " / " +
+      formatBytes(data.size) +
+      ")" +
+      " - " +
+      formatBytes(data.speedAvg) +
+      "/s" +
+      " - " +
+      formatEta(data.eta)
     );
   });
   logger.debug("Job", jobId, "has finished");
@@ -278,6 +278,8 @@ ipcMain.on("sideload_folder", async (event, args) => {
   globals.win.webContents.send("sideload_folder_progress", {
     items: tasks,
     done: true,
+    task: isInstalled ? "update" : "install",
+    packageName: packageName,
   });
 });
 
@@ -332,7 +334,17 @@ ipcMain.on("uninstall_app", async (event, args) => {
   }
 
   updateTask(tasks, "uninstall", true, true);
-  await execShellCommand(`adb uninstall "${packageName}"`);
+  try {
+    await execShellCommand(`adb uninstall "${packageName}"`);
+  } catch (ex) {
+    if (ex.message.includes("java.lang.IllegalArgumentException: Unknown package:")) {
+      console.log('Unknown package uninstall');
+      updateTask(tasks, "uninstall", true, false, true, "App not installed");
+    } else {
+      console.log('UnknwownError during uninstall', ex);
+      updateTask(tasks, "uninstall", true, false, false, "Error during uninstall");
+    }
+  }
   updateTask(tasks, "uninstall", true, false, true);
 
   updateTask(tasks, "done", true, false, true);
@@ -340,6 +352,8 @@ ipcMain.on("uninstall_app", async (event, args) => {
   globals.win.webContents.send("sideload_folder_progress", {
     items: tasks,
     done: true,
+    task: "uninstall",
+    packageName: packageName,
   });
 });
 

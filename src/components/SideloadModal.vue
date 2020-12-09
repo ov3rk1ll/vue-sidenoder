@@ -1,6 +1,12 @@
 <template>
-  <b-modal id="bv-modal-sideload" hide-footer>
-    <template #modal-title>Installing...</template>
+  <b-modal
+    id="bv-modal-sideload"
+    no-close-on-esc
+    no-close-on-backdrop
+    hide-header-close
+    @shown="completed = false"
+  >
+    <template #modal-title>Working...</template>
     <div class="d-block">
       <b-list-group>
         <b-list-group-item
@@ -14,6 +20,19 @@
         >
       </b-list-group>
     </div>
+    <template #modal-footer="{ close }">
+      <div class="w-100">
+        <b-button
+          v-if="completed"
+          variant="primary"
+          size="sm"
+          class="float-right"
+          @click="close()"
+        >
+          Close
+        </b-button>
+      </div>
+    </template>
   </b-modal>
 </template>
 
@@ -49,11 +68,12 @@ export default {
   created() {
     ipcRenderer.on("sideload_folder_progress", (e, args) => {
       this.items = args.items;
-      // TODO: Show close button if sideload is args.done: true
+      if (args.done) {
+        this.completed = true;
+      }
     });
   },
 };
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped></style>

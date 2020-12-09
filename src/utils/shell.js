@@ -9,6 +9,7 @@ export function execShellCommand(cmd) {
       if (error) {
         logger.warn("error in \"" + cmd + "\"", error);
         reject(error);
+        return;
       }
       if (stdout) {
         resolve(stdout);

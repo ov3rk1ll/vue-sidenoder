@@ -111,7 +111,7 @@ export default {
           title: "Uninstall " + item.simpleName + "?",
           size: "lg",
           buttonSize: "lg",
-          okVariant: "primary",
+          okVariant: "danger",
           // headerClass: "p-2 border-bottom-0",
           // footerClass: "p-2 border-top-0",
           centered: true,
@@ -136,8 +136,6 @@ export default {
 }
 .card-title {
   margin-bottom: 0.25rem;
-}
-.card-img-top {
 }
 .card-link + .card-link {
   margin-left: 1.25rem;
