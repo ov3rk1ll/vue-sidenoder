@@ -2,6 +2,8 @@
   <div class="home">
     <h1>Browse <b-spinner v-if="loading"></b-spinner></h1>
 
+    <h2 v-if="error">{{ error }}</h2>
+
     <b-form-group label="Filter list">
       <b-form-checkbox-group
         id="checkbox-group-1"
@@ -46,23 +48,25 @@ export default {
         { text: "Show installed", value: "installed" },
         { text: "Show updates", value: "update" },
       ],
+      error: null,
     };
   },
   mounted: function() {
     this.$nextTick(function() {
-      ipcRenderer.on("check_device", (e, args) => {
-        console.log("Browse: check_device", args);
-      });
       ipcRenderer.on("ls_dir", (e, args) => {
-        console.log(args);
-        this.items = args.value;
-        this.filterList();
-        this.loading = false;
+        if (args.success) {
+          this.error = null;
+          this.items = args.value;
+          this.filterList();
+          this.loading = false;
+        } else {
+          this.error = args.error;
+        }
       });
 
-      // TODO: check mount first
       this.loading = true;
-      ipcRenderer.send("ls_dir", { path: "/" });
+      ipcRenderer.on("check_mount", this.onMountUpdate);
+      ipcRenderer.send("check_mount", null);
 
       ipcRenderer.on("sideload_folder_progress", (e, args) => {
         console.log("Browse", "sideload_folder_progress", args);
@@ -76,6 +80,12 @@ export default {
     },
   },
   methods: {
+    onMountUpdate(e, args) {
+      if (args.success) {
+        ipcRenderer.removeListener("check_mount", this.onMountUpdate);
+        ipcRenderer.send("ls_dir", { path: "/" });
+      }
+    },
     filterList() {
       this.filteredItems = [];
       for (const item of this.items) {
