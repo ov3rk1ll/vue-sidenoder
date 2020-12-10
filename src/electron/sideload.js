@@ -1,6 +1,7 @@
 import { ipcMain } from "electron";
 import { tmpdir } from "os";
 import { existsSync } from "fs";
+import adbkit from "@devicefarmer/adbkit";
 import path from "path";
 import ApkReader from "node-apk-parser";
 
@@ -135,9 +136,9 @@ async function sideloadFolder(args) {
 
   // Check for connected device
 
-  const devices = await globals.adb.listDevices();
-  logger.debug("devices:", devices);
-  if (devices == null || devices.length == 0) {
+  const deviceState = await globals.adb.getState(globals.device.id);
+  logger.debug("deviceState:", deviceState);
+  if (!deviceState) {
     updateTask(tasks, "device", true, false, false, "No device connected");
     globals.win.webContents.send("sideload_folder_progress", {
       items: tasks,
@@ -153,7 +154,7 @@ async function sideloadFolder(args) {
       true,
       false,
       true,
-      "Device connected - " + devices[0].id
+      "Device connected - " + globals.device.id
     );
   }
   globals.win.webContents.send("sideload_folder_progress", { items: tasks });
@@ -166,7 +167,8 @@ async function sideloadFolder(args) {
     tempFolder = path.join(tmpdir(), "sideload-dl", args.app.packageName);
     logger.debug("tempFolder:", tempFolder);
     if (existsSync(tempFolder)) {
-      deleteFolderRecursive(tempFolder);
+      logger.debug("delete tempFolder");
+      await deleteFolderRecursive(tempFolder);
     }
     mkdirsSync(tempFolder, { recursive: true });
   } else {
@@ -175,7 +177,12 @@ async function sideloadFolder(args) {
     tempFolder = path.join(tmpdir(), "sideload-dl", args.data.path);
     logger.debug("tempFolder:", tempFolder);
     if (existsSync(tempFolder)) {
-      deleteFolderRecursive(tempFolder);
+      logger.debug("delete tempFolder");
+      try {
+        await deleteFolderRecursive(tempFolder);
+      } catch (err) {
+        logger.error("delete tempFolder failed", err);
+      }
     }
     mkdirsSync(tempFolder, { recursive: true });
 
@@ -237,7 +244,7 @@ async function sideloadFolder(args) {
 
   updateTask(tasks, "install1", true, true, false, "Installing app");
 
-  const normalInstall = await installApp(devices[0].id, apkFile);
+  const normalInstall = await installApp(globals.device.id, apkFile);
   updateTask(
     tasks,
     "install1",
@@ -248,6 +255,16 @@ async function sideloadFolder(args) {
       ? "Installed app"
       : "Installation failed - " + normalInstall
   );
+
+  if (normalInstall == undefined) {
+    globals.win.webContents.send("sideload_folder_progress", {
+      items: tasks,
+      done: true,
+      success: false,
+      error: "Unexpected install error",
+    });
+    return;
+  }
 
   // TODO: Check error type
   if (normalInstall !== true) {
@@ -272,7 +289,7 @@ async function sideloadFolder(args) {
     updateTask(tasks, "backup", true, false, true);
 
     updateTask(tasks, "uninstall", true, true);
-    await execShellCommand(`adb uninstall "${packageName}"`);
+    await globals.adb.uninstall(globals.device.id, packageName);
     updateTask(tasks, "uninstall", true, false, true);
 
     updateTask(tasks, "restore", true, true);
@@ -284,7 +301,7 @@ async function sideloadFolder(args) {
     updateTask(tasks, "restore", true, false, true);
 
     updateTask(tasks, "install2", true, true, false, "Installing app");
-    const freshInstall = await installApp(devices[0].id, apkFile);
+    const freshInstall = await installApp(globals.device.id, apkFile);
     updateTask(
       tasks,
       "install2",
@@ -314,7 +331,10 @@ async function sideloadFolder(args) {
     const deviceObbFolder = `/sdcard/Android/obb/${packageName}`;
     const obbFolder = path.join(tempFolder, packageName);
 
-    await execShellCommand(`adb shell rm -r "${deviceObbFolder}"`);
+    await globals.adb
+      .shell(globals.device.id, `rm -r "${deviceObbFolder}"`)
+      .then(adbkit.util.readAll);
+
     await execShellCommand(`adb push "${obbFolder}" "${deviceObbFolder}"`);
 
     updateTask(tasks, "copy_obb", true, false, true, "OBB files copied");
@@ -373,9 +393,9 @@ ipcMain.on("uninstall_app", async (event, args) => {
   globals.win.webContents.send("sideload_folder_progress", { items: tasks });
 
   // Check for connected device
-  const devices = await globals.adb.listDevices();
-  logger.debug("devices:", devices);
-  if (devices == null || devices.length == 0) {
+  const deviceState = await globals.adb.getState(globals.device.id);
+  logger.debug("deviceState:", deviceState);
+  if (!deviceState) {
     updateTask(tasks, "device", true, false, false, "No device connected");
   } else {
     updateTask(
@@ -384,32 +404,22 @@ ipcMain.on("uninstall_app", async (event, args) => {
       true,
       false,
       true,
-      "Device connected - " + devices[0].id
+      "Device connected - " + globals.device.id
     );
   }
 
   updateTask(tasks, "uninstall", true, true);
-  try {
-    await execShellCommand(`adb uninstall "${packageName}"`);
-  } catch (ex) {
-    if (
-      ex.message.includes(
-        "java.lang.IllegalArgumentException: Unknown package:"
-      )
-    ) {
-      console.log("Unknown package uninstall");
-      updateTask(tasks, "uninstall", true, false, true, "App not installed");
-    } else {
-      console.log("UnknwownError during uninstall", ex);
-      updateTask(
-        tasks,
-        "uninstall",
-        true,
-        false,
-        false,
-        "Error during uninstall"
-      );
-    }
+  const status = await globals.adb.uninstall(globals.device.id, packageName);
+  if (status !== true) {
+    console.log("UnknwownError during uninstall", status);
+    updateTask(
+      tasks,
+      "uninstall",
+      true,
+      false,
+      false,
+      "Error during uninstall"
+    );
   }
   updateTask(tasks, "uninstall", true, false, true);
 
@@ -418,6 +428,7 @@ ipcMain.on("uninstall_app", async (event, args) => {
   globals.win.webContents.send("sideload_folder_progress", {
     items: tasks,
     done: true,
+    success: true,
     task: "uninstall",
     packageName: packageName,
   });

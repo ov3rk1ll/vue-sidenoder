@@ -1,4 +1,5 @@
 import { ipcMain } from "electron";
+import adbkit from "@devicefarmer/adbkit";
 
 import { execShellCommand } from "../utils/shell";
 import globals from "./globals";
@@ -25,15 +26,9 @@ export async function getInstalledApps() {
   if (!globals.device) {
     return {};
   }
-  console.time("read list");
-  const apps = (
-    await execShellCommand(`adb shell cmd package list packages -3`)
-  ) // Read packages
-    .split("\n") // Split lines
-    .filter((x) => !!x) // Remove empty lines
-    .map((x) => x.trim().split(":")[1]); // remove leading "package:" from each entry
-  // const apps = await globals.adb.getPackages(globals.device.id);
-  console.timeEnd("read list");
+
+  const apps = await globals.adb.getPackages(globals.device.id, "-3");
+  console.log("getInstalledApps got " + apps.length + " apps");
 
   const appInfo = {};
 
@@ -64,13 +59,14 @@ export async function getAppInfo(packageName) {
     system: false,
   };
   try {
-    console.time(`parse ${packageName}`);
-    const info = await execShellCommand(
-      `adb shell dumpsys package ${packageName}`
-    );
-    // const path = await execShellCommand(`adb shell pm path ${app}`).slice(8);
+    const info = await globals.adb
+      .shell(globals.device.id, `dumpsys package ${packageName}`)
+      .then(adbkit.util.readAll)
+      .then((output) => output.toString("utf-8"));
 
-    appInfo.versionCode = info.match(/versionCode=[0-9]*/)[0].slice(12);
+    appInfo.versionCode = parseInt(
+      info.match(/versionCode=[0-9]*/)[0].slice(12)
+    );
     let pkgFlags = /.*pkgFlags=\[(.*)\]/m.exec(info);
     if (pkgFlags) {
       pkgFlags = pkgFlags[1].trim().split(" ");
@@ -78,8 +74,8 @@ export async function getAppInfo(packageName) {
       appInfo.debug = pkgFlags.includes("DEBUGGABLE");
       appInfo.system = pkgFlags.includes("SYSTEM");
     }
-    console.timeEnd(`parse ${packageName}`);
   } catch (e) {
+    console.error("Parse-Error:", e);
     return null;
   }
   return appInfo;
