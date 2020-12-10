@@ -26,9 +26,11 @@ export async function getInstalledApps() {
     return {};
   }
   console.time("read list");
-  const apps = (await execShellCommand(`adb shell cmd package list packages -3`)) // Read packages
+  const apps = (
+    await execShellCommand(`adb shell cmd package list packages -3`)
+  ) // Read packages
     .split("\n") // Split lines
-    .filter(x => !!x) // Remove empty lines
+    .filter((x) => !!x) // Remove empty lines
     .map((x) => x.trim().split(":")[1]); // remove leading "package:" from each entry
   // const apps = await globals.adb.getPackages(globals.device.id);
   console.timeEnd("read list");
@@ -44,26 +46,42 @@ export async function getInstalledApps() {
       system: false,
     };
 
-    try {
-      console.time(`parse ${app}`);
-      const info = await execShellCommand(`adb shell dumpsys package ${app}`);
-      // const path = await execShellCommand(`adb shell pm path ${app}`).slice(8);
-
-      appInfo[app].versionCode = info.match(/versionCode=[0-9]*/)[0].slice(12);
-      let pkgFlags = /.*pkgFlags=\[(.*)\]/m.exec(info);
-      if (pkgFlags) {
-        pkgFlags = pkgFlags[1].trim().split(" ");
-
-        appInfo[app].debug = pkgFlags.includes("DEBUGGABLE");
-        appInfo[app].system = pkgFlags.includes("SYSTEM");
-      }
-      console.timeEnd(`parse ${app}`);
-    } catch (e) {
-      // continue regardless of error
+    const info = await getAppInfo(app);
+    if (info != null) {
+      appInfo[app] = info;
     }
   }
   console.timeEnd("parse list");
 
+  return appInfo;
+}
+
+export async function getAppInfo(packageName) {
+  const appInfo = {
+    packageName: packageName,
+    versionCode: null,
+    debug: false,
+    system: false,
+  };
+  try {
+    console.time(`parse ${packageName}`);
+    const info = await execShellCommand(
+      `adb shell dumpsys package ${packageName}`
+    );
+    // const path = await execShellCommand(`adb shell pm path ${app}`).slice(8);
+
+    appInfo.versionCode = info.match(/versionCode=[0-9]*/)[0].slice(12);
+    let pkgFlags = /.*pkgFlags=\[(.*)\]/m.exec(info);
+    if (pkgFlags) {
+      pkgFlags = pkgFlags[1].trim().split(" ");
+
+      appInfo.debug = pkgFlags.includes("DEBUGGABLE");
+      appInfo.system = pkgFlags.includes("SYSTEM");
+    }
+    console.timeEnd(`parse ${packageName}`);
+  } catch (e) {
+    return null;
+  }
   return appInfo;
 }
 

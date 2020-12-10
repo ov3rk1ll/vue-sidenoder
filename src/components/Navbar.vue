@@ -9,6 +9,7 @@
         <b-navbar-nav>
           <b-nav-item :to="{ path: '/browse' }" exact>Browse</b-nav-item>
           <b-nav-item :to="{ path: '/installed' }">Installed apps</b-nav-item>
+          <b-nav-item :to="{ path: '/sideload' }">Sideload app</b-nav-item>
           <b-nav-item :to="{ path: '/about' }">About</b-nav-item>
         </b-navbar-nav>
 

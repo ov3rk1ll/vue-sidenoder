@@ -2,6 +2,7 @@ import { ipcMain } from "electron";
 import { tmpdir } from "os";
 import { existsSync } from "fs";
 import path from "path";
+import ApkReader from "node-apk-parser";
 
 import globals from "./globals";
 import { copy, waitForJob } from "./rclone";
@@ -9,8 +10,31 @@ import { formatEta, formatBytes } from "../utils/formatter";
 import { mkdirsSync, deleteFolderRecursive } from "../utils/fs";
 import { Logger } from "../utils/logger";
 import { execShellCommand } from "../utils/shell";
+import { getAppInfo } from "./devices";
 
 ipcMain.on("sideload_folder", async (event, args) => {
+  try {
+    sideloadFolder(args);
+  } catch (ex) {
+    globals.win.webContents.send("sideload_folder_progress", {
+      items: [
+        {
+          key: "error",
+          text: "Unexpected error - " + ex,
+          started: true,
+          loading: true,
+          status: false,
+          show: true,
+        },
+      ],
+      done: true,
+      success: false,
+      error: ex,
+    });
+  }
+});
+
+async function sideloadFolder(args) {
   const logger = new Logger("Sideload");
   logger.info("args:", args);
 
@@ -31,7 +55,7 @@ ipcMain.on("sideload_folder", async (event, args) => {
       started: false,
       loading: false,
       status: false,
-      show: true,
+      show: !args.local,
     },
     {
       key: "packageinfo",
@@ -115,6 +139,13 @@ ipcMain.on("sideload_folder", async (event, args) => {
   logger.debug("devices:", devices);
   if (devices == null || devices.length == 0) {
     updateTask(tasks, "device", true, false, false, "No device connected");
+    globals.win.webContents.send("sideload_folder_progress", {
+      items: tasks,
+      done: true,
+      success: false,
+      error: "No device connected",
+    });
+    return;
   } else {
     updateTask(
       tasks,
@@ -128,56 +159,75 @@ ipcMain.on("sideload_folder", async (event, args) => {
   globals.win.webContents.send("sideload_folder_progress", { items: tasks });
 
   // Download folder
-  updateTask(tasks, "download", true, true, false, "Starting download...");
+  let apkFile = null;
+  let tempFolder = null;
+  if (args.local) {
+    apkFile = args.path;
+    tempFolder = path.join(tmpdir(), "sideload-dl", args.app.packageName);
+    logger.debug("tempFolder:", tempFolder);
+    if (existsSync(tempFolder)) {
+      deleteFolderRecursive(tempFolder);
+    }
+    mkdirsSync(tempFolder, { recursive: true });
+  } else {
+    updateTask(tasks, "download", true, true, false, "Starting download...");
 
-  const tempFolder = path.join(tmpdir(), "sideload-dl", args.data.path);
-  logger.debug("tempFolder:", tempFolder);
-  if (existsSync(tempFolder)) {
-    deleteFolderRecursive(tempFolder);
-  }
-  mkdirsSync(tempFolder, { recursive: true });
+    tempFolder = path.join(tmpdir(), "sideload-dl", args.data.path);
+    logger.debug("tempFolder:", tempFolder);
+    if (existsSync(tempFolder)) {
+      deleteFolderRecursive(tempFolder);
+    }
+    mkdirsSync(tempFolder, { recursive: true });
 
-  const apkFile = path.join(tempFolder, args.data.apk.Name);
+    apkFile = path.join(tempFolder, args.data.apk.Name);
 
-  logger.debug("copy", args.data.path, "to", tempFolder);
+    logger.debug("copy", args.data.path, "to", tempFolder);
 
-  const jobId = await copy(args.data.path, tempFolder);
+    const jobId = await copy(args.data.path, tempFolder);
 
-  await waitForJob(jobId, (data) => {
+    await waitForJob(jobId, (data) => {
+      updateTask(
+        tasks,
+        "download",
+        true,
+        true,
+        false,
+        "Downloading files - " +
+          data.percentage +
+          "% (" +
+          formatBytes(data.bytes) +
+          " / " +
+          formatBytes(data.size) +
+          ")" +
+          " - " +
+          formatBytes(data.speedAvg) +
+          "/s" +
+          " - " +
+          formatEta(data.eta)
+      );
+    });
+    logger.debug("Job", jobId, "has finished");
+
+    const apkFileExists = existsSync(apkFile);
     updateTask(
       tasks,
       "download",
       true,
-      true,
       false,
-      "Downloading files - " +
-      data.percentage +
-      "% (" +
-      formatBytes(data.bytes) +
-      " / " +
-      formatBytes(data.size) +
-      ")" +
-      " - " +
-      formatBytes(data.speedAvg) +
-      "/s" +
-      " - " +
-      formatEta(data.eta)
+      apkFileExists,
+      apkFileExists ? "Download completed" : "Download failed"
     );
-  });
-  logger.debug("Job", jobId, "has finished");
 
-  const apkFileExists = existsSync(apkFile);
-  updateTask(
-    tasks,
-    "download",
-    true,
-    false,
-    apkFileExists,
-    apkFileExists ? "Download completed" : "Download failed"
-  );
-
-  if (!apkFileExists) {
-    // TODO: Cancel because download failed
+    if (!apkFileExists) {
+      // TODO: Cancel because download failed
+      globals.win.webContents.send("sideload_folder_progress", {
+        items: tasks,
+        done: true,
+        success: false,
+        error: apkFile + " not found",
+      });
+      return;
+    }
   }
 
   // Read package info from filename or file content
@@ -193,13 +243,14 @@ ipcMain.on("sideload_folder", async (event, args) => {
     "install1",
     true,
     false,
-    normalInstall,
-    normalInstall ? "Installed app" : "Installation failed"
+    normalInstall === true,
+    normalInstall === true
+      ? "Installed app"
+      : "Installation failed - " + normalInstall
   );
 
-  // TODO: Check error
-  if (!normalInstall) {
-    // TODO: Handle update
+  // TODO: Check error type
+  if (normalInstall !== true) {
     // Show extra steps
     let task = tasks.filter((x) => x.key === "backup")[0];
     task.show = true;
@@ -229,6 +280,7 @@ ipcMain.on("sideload_folder", async (event, args) => {
     await execShellCommand(
       `adb push "${appdataFolder}" "/sdcard/Android/data/${packageName}"`
     );
+    await deleteFolderRecursive(appdataFolder);
     updateTask(tasks, "restore", true, false, true);
 
     updateTask(tasks, "install2", true, true, false, "Installing app");
@@ -238,8 +290,10 @@ ipcMain.on("sideload_folder", async (event, args) => {
       "install2",
       true,
       false,
-      freshInstall,
-      freshInstall ? "Installed app" : "Installation failed"
+      freshInstall === true,
+      freshInstall === true
+        ? "Installed app"
+        : "Installation failed - " + freshInstall
     );
   }
 
@@ -271,17 +325,18 @@ ipcMain.on("sideload_folder", async (event, args) => {
   // Delete tempFolder
   await deleteFolderRecursive(tempFolder);
 
-  updateTask(tasks, "cleanup", true, false, true, "Cleanup...");
+  updateTask(tasks, "cleanup", true, false, true, "Cleanup finished");
 
   updateTask(tasks, "done", true, false, true);
 
   globals.win.webContents.send("sideload_folder_progress", {
     items: tasks,
     done: true,
+    success: true,
     task: isInstalled ? "update" : "install",
     packageName: packageName,
   });
-});
+}
 
 ipcMain.on("uninstall_app", async (event, args) => {
   const logger = new Logger("Uninstall");
@@ -337,12 +392,23 @@ ipcMain.on("uninstall_app", async (event, args) => {
   try {
     await execShellCommand(`adb uninstall "${packageName}"`);
   } catch (ex) {
-    if (ex.message.includes("java.lang.IllegalArgumentException: Unknown package:")) {
-      console.log('Unknown package uninstall');
+    if (
+      ex.message.includes(
+        "java.lang.IllegalArgumentException: Unknown package:"
+      )
+    ) {
+      console.log("Unknown package uninstall");
       updateTask(tasks, "uninstall", true, false, true, "App not installed");
     } else {
-      console.log('UnknwownError during uninstall', ex);
-      updateTask(tasks, "uninstall", true, false, false, "Error during uninstall");
+      console.log("UnknwownError during uninstall", ex);
+      updateTask(
+        tasks,
+        "uninstall",
+        true,
+        false,
+        false,
+        "Error during uninstall"
+      );
     }
   }
   updateTask(tasks, "uninstall", true, false, true);
@@ -382,7 +448,33 @@ async function installApp(deviceId, apkFile) {
     logger.debug("installed", installState);
     return installState;
   } catch (e) {
-    logger.error("Error", e);
-    return false;
+    logger.error("Error", e.code);
+    return e.code;
   }
 }
+
+ipcMain.on("sideload_local_apk", async (event, args) => {
+  const logger = new Logger("Sideload APK");
+  logger.info("args:", args);
+
+  const reader = ApkReader.readFile(args.path);
+  const manifest = reader.readManifestSync();
+
+  const installed = await getAppInfo(manifest.package);
+  logger.info("installed:", installed);
+
+  // Build data for sideload_folder
+  const sideloadArgs = {
+    local: true,
+    path: args.path,
+    app: {
+      packageName: manifest.package,
+      installedVersion: installed == null ? -1 : installed.versionCode,
+    },
+    data: {
+      hasObb: false,
+    },
+  };
+
+  sideloadFolder(sideloadArgs);
+});
