@@ -1,7 +1,6 @@
 import { ipcMain } from "electron";
 import adbkit from "@devicefarmer/adbkit";
 
-import { execShellCommand } from "../utils/shell";
 import globals from "./globals";
 
 ipcMain.on("check_device", (event) => {
