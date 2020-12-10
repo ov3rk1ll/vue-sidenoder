@@ -112,7 +112,7 @@ function parseList(folder, items, installedApps) {
       entry.simpleName = entry.simpleName.split(" -versionCode-")[0];
     }
     if (new RegExp(".* -packageName-").test(item.Name)) {
-      entry.packageName = item.Name.match(/-packageName-([a-zA-Z.]*)/)[1];
+      entry.packageName = item.Name.match(/-packageName-([a-zA-Z0-9_.]*)/)[1];
       entry.simpleName = entry.simpleName.split(" -packageName-")[0];
     }
 
@@ -122,6 +122,13 @@ function parseList(folder, items, installedApps) {
 
     if (new RegExp(".* -NA-").test(item.Name)) {
       entry.na = true;
+    }
+
+    const versionName = entry.simpleName.match(/v(\d\S*)/);
+    if (versionName == null) {
+      console.log("parse versionName failed for", entry.simpleName);
+    } else {
+      entry.versionName = "v" + versionName[1];
     }
 
     entry.simpleName = cleanUpFoldername(entry.simpleName);
@@ -203,5 +210,3 @@ ipcMain.on("get_installed_apps", async (event) => {
     value: await getInstalledApps(),
   });
 });
-
-

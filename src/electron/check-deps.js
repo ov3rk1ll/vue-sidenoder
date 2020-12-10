@@ -27,6 +27,9 @@ ipcMain.on("check_deps_mount_dir", (event) => {
 
 ipcMain.on("check_deps_adb", (event) => {
   const exists = commandExistsSync("adb");
+  // Download https://dl.google.com/android/repository/platform-tools-latest-windows.zip
+  // Download https://dl.google.com/android/repository/platform-tools-latest-darwin.zip
+  // Download https://dl.google.com/android/repository/platform-tools-latest-linux.zip
   event.reply("check_deps_adb", {
     status: exists,
     value: exists ? "ADB detected" : "Install ADB globally!",
@@ -35,6 +38,9 @@ ipcMain.on("check_deps_adb", (event) => {
 
 ipcMain.on("check_deps_rclone", (event) => {
   const exists = commandExistsSync("rclone");
+  // Download https://downloads.rclone.org/v1.53.3/rclone-v1.53.3-windows-amd64.zip
+  // Download https://downloads.rclone.org/v1.53.3/rclone-v1.53.3-osx-amd64.zip
+  // Download https://downloads.rclone.org/v1.53.3/rclone-v1.53.3-linux-amd64.zip
   event.reply("check_deps_rclone", {
     status: exists,
     value: exists ? "Rclone detected" : "Install Rclone globally!",

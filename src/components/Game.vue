@@ -7,7 +7,17 @@
     tag="article"
     class="mx-1"
   >
-    <b-card-text>{{ item.versionName }} ({{ item.versionCode }})</b-card-text>
+    <div class="ribbon" v-if="item.mp">MP</div>
+    <b-card-text></b-card-text>
+
+    <template #footer>
+      <small class="d-flex"
+        ><div class="flex-fill">
+          {{ item.versionName || item.versionCode }}
+        </div>
+        <div>Updated {{ item.createdAt.toLocaleDateString() }}</div></small
+      >
+    </template>
 
     <b-button
       class="card-link"
@@ -129,8 +139,11 @@ export default {
 };
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
+<style scoped lang="scss">
+@import "@/style/main.scss";
+.card {
+  overflow: hidden;
+}
 .card-body {
   padding: 0.5rem 0.5rem 1.25rem 0.5rem;
 }
@@ -142,5 +155,21 @@ export default {
 }
 .card-text {
   margin-bottom: 0.5rem;
+}
+
+.ribbon {
+  height: 40px;
+  background: color("indigo");
+  width: 200px;
+  text-align: center;
+  font-size: 1rem;
+  line-height: 40px;
+  font-family: sans-serif;
+  color: #fff;
+  transform: rotate(-45deg);
+  position: absolute;
+  top: 6px;
+  left: -70px;
+  box-shadow: inset 0px 0px 0px 4px rgba(255, 255, 255, 0.34);
 }
 </style>
