@@ -21,12 +21,13 @@
   },
   "main": "background.js",
   "dependencies": {
-    "adbkit": "^2.11.1",
+    "@devicefarmer/adbkit": "^2.11.3",
     "bootstrap": "^4.5.3",
     "bootstrap-vue": "^2.20.1",
     "bootswatch": "^4.5.3",
     "command-exists": "^1.2.9",
     "core-js": "^3.6.5",
+    "node-apk-parser": "^0.2.3",
     "node-fetch": "^2.6.1",
     "vue": "^2.6.12",
     "vue-router": "^3.2.0"
