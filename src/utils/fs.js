@@ -8,6 +8,11 @@ import {
   rmdirSync,
 } from "fs";
 import path from "path";
+import { tmpdir } from "os";
+
+export function workdir() {
+  return path.join(tmpdir(), "sideload-dl");
+}
 
 export function mkdirsSync(p, opts, made) {
   if (!made) made = null;

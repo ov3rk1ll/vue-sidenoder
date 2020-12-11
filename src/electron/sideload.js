@@ -1,5 +1,4 @@
 import { ipcMain } from "electron";
-import { tmpdir } from "os";
 import { existsSync } from "fs";
 import adbkit from "@devicefarmer/adbkit";
 import path from "path";
@@ -8,7 +7,7 @@ import ApkReader from "node-apk-parser";
 import globals from "./globals";
 import { copy, waitForJob } from "./rclone";
 import { formatEta, formatBytes } from "../utils/formatter";
-import { mkdirsSync, deleteFolderRecursive } from "../utils/fs";
+import { mkdirsSync, deleteFolderRecursive, workdir } from "../utils/fs";
 import { Logger } from "../utils/logger";
 import { execShellCommand } from "../utils/shell";
 import { getAppInfo } from "./devices";
@@ -164,7 +163,7 @@ async function sideloadFolder(args) {
   let tempFolder = null;
   if (args.local) {
     apkFile = args.path;
-    tempFolder = path.join(tmpdir(), "sideload-dl", args.app.packageName);
+    tempFolder = path.join(workdir(), args.app.packageName);
     logger.debug("tempFolder:", tempFolder);
     if (existsSync(tempFolder)) {
       logger.debug("delete tempFolder");
@@ -174,7 +173,7 @@ async function sideloadFolder(args) {
   } else {
     updateTask(tasks, "download", true, true, false, "Starting download...");
 
-    tempFolder = path.join(tmpdir(), "sideload-dl", args.data.path);
+    tempFolder = path.join(workdir(), args.data.path);
     logger.debug("tempFolder:", tempFolder);
     if (existsSync(tempFolder)) {
       logger.debug("delete tempFolder");
@@ -200,17 +199,17 @@ async function sideloadFolder(args) {
         true,
         false,
         "Downloading files - " +
-          data.percentage +
-          "% (" +
-          formatBytes(data.bytes) +
-          " / " +
-          formatBytes(data.size) +
-          ")" +
-          " - " +
-          formatBytes(data.speedAvg) +
-          "/s" +
-          " - " +
-          formatEta(data.eta)
+        data.percentage +
+        "% (" +
+        formatBytes(data.bytes) +
+        " / " +
+        formatBytes(data.size) +
+        ")" +
+        " - " +
+        formatBytes(data.speedAvg) +
+        "/s" +
+        " - " +
+        formatEta(data.eta)
       );
     });
     logger.debug("Job", jobId, "has finished");
