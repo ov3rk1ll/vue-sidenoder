@@ -181,25 +181,27 @@ async function sideloadFolder(event, args) {
     const jobId = await copy(args.data.path, tempFolder);
 
     await waitForJob(jobId, (data) => {
-      updateTask(
-        tasks,
-        "download",
-        true,
-        true,
-        false,
-        "Downloading files - " +
-        data.percentage +
-        "% (" +
-        formatBytes(data.bytes) +
-        " / " +
-        formatBytes(data.size) +
-        ")" +
-        " - " +
-        formatBytes(data.speedAvg) +
-        "/s" +
-        " - " +
-        formatEta(data.eta)
-      );
+      if (data.percentage) {
+        updateTask(
+          tasks,
+          "download",
+          true,
+          true,
+          false,
+          "Downloading files - " +
+            data.percentage +
+            "% (" +
+            formatBytes(data.bytes) +
+            " / " +
+            formatBytes(data.size) +
+            ")" +
+            " - " +
+            formatBytes(data.speedAvg) +
+            "/s" +
+            " - " +
+            formatEta(data.eta)
+        );
+      }
     });
     logger.debug("Job", jobId, "has finished");
 
@@ -455,7 +457,7 @@ async function installApp(deviceId, apkFile) {
 
 export async function adbPush(src, dst, cb) {
   if (!cb) {
-    cb = () => { };
+    cb = () => {};
   }
   const files = await getFiles(src);
   let totalSize = 0;
@@ -484,9 +486,9 @@ export async function adbPull(src, dst) {
     const dstFile = path.join(dst, relName);
     // Create folder as needed
     await mkdirsSync(path.dirname(dstFile));
-    await globals.adb.pull(globals.device.id, file).then(function (transfer) {
-      return new Promise(function (resolve, reject) {
-        transfer.on("end", function () {
+    await globals.adb.pull(globals.device.id, file).then(function(transfer) {
+      return new Promise(function(resolve, reject) {
+        transfer.on("end", function() {
           resolve(dstFile);
         });
         transfer.on("error", reject);
