@@ -1,7 +1,7 @@
 import { ipcMain } from "electron";
 import { platform } from "os";
 import { sync as commandExistsSync } from "command-exists";
-import settings from 'electron-settings';
+import settings from "electron-settings";
 
 import { execShellCommand } from "../utils/shell";
 import { workdir } from "../utils/fs";
@@ -20,28 +20,20 @@ ipcMain.on("check_deps_work_dir", (event) => {
   });
 });
 
-ipcMain.on("check_deps_adb", (event) => {
-  const exists = commandExistsSync("adb");
-  // Download https://dl.google.com/android/repository/platform-tools-latest-windows.zip
-  // Download https://dl.google.com/android/repository/platform-tools-latest-darwin.zip
-  // Download https://dl.google.com/android/repository/platform-tools-latest-linux.zip
-  event.reply("check_deps_adb", {
-    status: exists,
-    value: exists ? "ADB detected" : "Install ADB globally!",
-  });
-});
-
 ipcMain.on("check_deps_rclone", async (event) => {
   let rclonePath = "rclone";
   if (await settings.has("rclone")) {
-    rclonePath = await settings.get('rclone');
+    rclonePath = await settings.get("rclone");
   }
   const exists = commandExistsSync(rclonePath);
   let version = null;
 
   if (exists) {
     let output = await execShellCommand(`${rclonePath} --version`);
-    version = output.split("\n")[0].trim().split(" ")[1];
+    version = output
+      .split("\n")[0]
+      .trim()
+      .split(" ")[1];
   }
 
   event.reply("check_deps_rclone", {

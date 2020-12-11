@@ -55,12 +55,6 @@ export default {
           status: true,
         },
         {
-          key: "adb",
-          text: "Checking adb",
-          loading: true,
-          status: false,
-        },
-        {
           key: "rclone",
           text: "Checking rclone",
           loading: true,
