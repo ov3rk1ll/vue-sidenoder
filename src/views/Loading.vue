@@ -12,9 +12,23 @@
         :variant="item.loading ? 'default' : item.status ? 'success' : 'danger'"
       >
         <b-spinner small :class="{ invisible: !item.loading }"></b-spinner>
-        {{ item.text }}</b-list-group-item
-      >
+        {{ item.text }}
+        <b-button
+          class="float-right"
+          v-if="!item.loading && !item.status && item.click"
+          @click="$refs[item.click].click()"
+          >Select {{ item.click }}</b-button
+        >
+      </b-list-group-item>
     </b-list-group>
+
+    <input
+      type="file"
+      ref="rclone"
+      style="display: none"
+      accept=".exe"
+      @change="onRcloneSelected($event)"
+    />
   </div>
 </template>
 
@@ -35,14 +49,8 @@ export default {
           status: false,
         },
         {
-          key: "temp_dir",
-          text: "Finding temp dir",
-          loading: true,
-          status: true,
-        },
-        {
-          key: "mount_dir",
-          text: "Finding mount dir",
+          key: "work_dir",
+          text: "Finding work dir",
           loading: true,
           status: true,
         },
@@ -57,14 +65,20 @@ export default {
           text: "Checking rclone",
           loading: true,
           status: false,
+          click: "rclone",
         },
       ],
     };
   },
   mounted: function() {
     this.$nextTick(function() {
+      this.runCheck();
+    });
+  },
+  methods: {
+    runCheck() {
       for (const item of this.items) {
-        ipcRenderer.on("check_deps_" + item.key, (e, args) => {
+        ipcRenderer.once("check_deps_" + item.key, (e, args) => {
           const tmp = this.items.filter((x) => x.key === item.key)[0];
           tmp.status = args.status;
           tmp.text = args.value;
@@ -74,10 +88,8 @@ export default {
         });
         ipcRenderer.send("check_deps_" + item.key, null);
       }
-    });
-  },
-  methods: {
-    checkStatus: function() {
+    },
+    checkStatus() {
       let allDone = true;
       let allSuccess = true;
       for (const item of this.items) {
@@ -92,10 +104,19 @@ export default {
       this.success = allSuccess;
 
       if (this.completed && this.success) {
-        setTimeout(() => {
+        /*setTimeout(() => {
           this.$router.push({ path: "browse" });
-        }, 1000);
+        }, 1000);*/
       }
+    },
+    onRcloneSelected($event) {
+      const path = $event.target.files[0].path;
+      console.log(path);
+
+      ipcRenderer.once("put_setting", () => {
+        this.runCheck();
+      });
+      ipcRenderer.send("put_setting", { key: "rclone", value: path });
     },
   },
 };

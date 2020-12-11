@@ -6,6 +6,7 @@ import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import path from "path";
 import adbkit from "@devicefarmer/adbkit";
+
 const isDevelopment = process.env.NODE_ENV !== "production";
 
 import globals from "./globals";
@@ -15,6 +16,7 @@ import "./check-deps";
 import "./devices";
 import "./mount";
 import "./sideload";
+import "./settings";
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([

@@ -4,6 +4,7 @@ import fetch from "node-fetch";
 import path from "path";
 import { tmpdir } from "os";
 import { exec } from "child_process";
+import settings from 'electron-settings';
 
 // import globals from "./globals";
 import { check, list as rcloneList } from "./rclone";
@@ -41,7 +42,13 @@ async function connectMount(event) {
     const cpath = path.join(tmpdir(), "c");
     writeFileSync(cpath, config);
 
-    exec(`rclone rcd --rc-no-auth --config ${cpath}`);
+    let rclonePath = "rclone";
+    if (await settings.has("rclone")) {
+      rclonePath = await settings.get('rclone');
+    }
+    const cmd = `${rclonePath} rcd --rc-no-auth --config ${cpath}`;
+    console.log("Start Rclone in RC mode:", cmd);
+    exec(cmd);
 
     event.reply("check_mount", {
       success: true,
