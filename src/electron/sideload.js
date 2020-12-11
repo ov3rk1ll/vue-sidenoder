@@ -1,5 +1,5 @@
 import { ipcMain } from "electron";
-import { existsSync } from "fs";
+import { existsSync, statSync } from "fs";
 import adbkit from "@devicefarmer/adbkit";
 import path from "path";
 import ApkReader from "node-apk-parser";
@@ -7,7 +7,7 @@ import ApkReader from "node-apk-parser";
 import globals from "./globals";
 import { copy, waitForJob } from "./rclone";
 import { formatEta, formatBytes } from "../utils/formatter";
-import { mkdirsSync, deleteFolderRecursive, workdir } from "../utils/fs";
+import { mkdirsSync, deleteFolderRecursive, workdir, getFiles } from "../utils/fs";
 import { Logger } from "../utils/logger";
 import { execShellCommand } from "../utils/shell";
 import { getAppInfo } from "./devices";
@@ -282,9 +282,7 @@ async function sideloadFolder(args) {
     mkdirsSync(appdataFolder, { recursive: true });
 
     updateTask(tasks, "backup", true, true);
-    await execShellCommand(
-      `adb pull "/sdcard/Android/data/${packageName}" "${appdataFolder}"`
-    );
+    await adbPull(`/sdcard/Android/data/${packageName}`, appdataFolder)
     updateTask(tasks, "backup", true, false, true);
 
     updateTask(tasks, "uninstall", true, true);
@@ -293,9 +291,7 @@ async function sideloadFolder(args) {
 
     updateTask(tasks, "restore", true, true);
     globals.win.webContents.send("sideload_folder_progress", { items: tasks });
-    await execShellCommand(
-      `adb push "${appdataFolder}" "/sdcard/Android/data/${packageName}"`
-    );
+    await adbPush(appdataFolder, `/sdcard/Android/data/${packageName}`);
     await deleteFolderRecursive(appdataFolder);
     updateTask(tasks, "restore", true, false, true);
 
@@ -334,7 +330,9 @@ async function sideloadFolder(args) {
       .shell(globals.device.id, `rm -r "${deviceObbFolder}"`)
       .then(adbkit.util.readAll);
 
-    await execShellCommand(`adb push "${obbFolder}" "${deviceObbFolder}"`);
+    await adbPush(obbFolder, deviceObbFolder, (i, t, s, m) => {
+      updateTask(tasks, "copy_obb", true, true, false, `[${i + 1}/${t}] ${m}`);
+    });
 
     updateTask(tasks, "copy_obb", true, false, true, "OBB files copied");
   }
@@ -461,6 +459,29 @@ async function installApp(deviceId, apkFile) {
     logger.error("Error", e.code);
     return e.code;
   }
+}
+
+async function adbPush(src, dst, cb) {
+  if (!cb) { cb = () => { } }
+  const files = await getFiles(src);
+  let totalSize = 0;
+  for (const file of files) {
+    totalSize += statSync(file).size;
+  }
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const relName = file.slice(src.length + 1);
+    cb(i, files.length, totalSize, `Sending ${relName}`);
+    await globals.adb.push(globals.device.id, file, dst + "/" + relName);
+    cb(i, files.length, totalSize, relName + " - Done");
+  }
+}
+
+async function adbPull(src, dst) {
+  // TODO: implement with adbkit
+  await execShellCommand(
+    `adb pull "${src}" "${dst}"`
+  );
 }
 
 ipcMain.on("sideload_local_apk", async (event, args) => {
