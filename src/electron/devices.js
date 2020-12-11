@@ -82,10 +82,12 @@ export async function getAppInfo(packageName) {
 
 export async function getDeviceFiles(serial, dir) {
   const dirents = await globals.adb.readdir(globals.device.id, dir);
-  const files = await Promise.all(dirents.map((dirent) => {
-    const res = (dir + "/" + dirent.name).replace("//", "/");
-    return dirent.isDirectory() ? getDeviceFiles(serial, res) : res;
-  }));
+  const files = await Promise.all(
+    dirents.map((dirent) => {
+      const res = (dir + "/" + dirent.name).replace("//", "/");
+      return dirent.isDirectory() ? getDeviceFiles(serial, res) : res;
+    })
+  );
   return Array.prototype.concat(...files);
 }
 

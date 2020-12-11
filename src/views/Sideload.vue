@@ -1,9 +1,7 @@
 <template>
   <div class="about">
     <h1>Sideload a local app</h1>
-    <p class="lead">
-      Install any app you have on your system
-    </p>
+    <p class="lead">Install any app you have on your system</p>
 
     <h2>Sideload APK file</h2>
     <input

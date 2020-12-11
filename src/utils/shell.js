@@ -7,14 +7,14 @@ export function execShellCommand(cmd) {
   return new Promise((resolve, reject) => {
     exec(cmd, (error, stdout, stderr) => {
       if (error) {
-        logger.warn("error in \"" + cmd + "\"", error);
+        logger.warn('error in "' + cmd + '"', error);
         reject(error);
         return;
       }
       if (stdout) {
         resolve(stdout);
       } else {
-        logger.warn("stderr in \"" + cmd + "\"", error);
+        logger.warn('stderr in "' + cmd + '"', error);
         reject(stderr);
       }
     });

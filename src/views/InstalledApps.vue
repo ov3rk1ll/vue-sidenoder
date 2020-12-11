@@ -2,7 +2,7 @@
   <div>
     <div class="loading" v-if="loading">
       <b-spinner
-        style="width: 5rem; height: 5rem;"
+        style="width: 5rem; height: 5rem"
         label="Large Spinner"
       ></b-spinner>
     </div>

@@ -1,5 +1,5 @@
 import { ipcMain } from "electron";
-import settings from 'electron-settings';
+import settings from "electron-settings";
 
 ipcMain.on("put_setting", async (event, args) => {
   await settings.set(args.key, args.value);
