@@ -1,4 +1,3 @@
-import { ipcMain } from "electron";
 import { existsSync, statSync, createWriteStream } from "fs";
 import adbkit from "@devicefarmer/adbkit";
 import path from "path";
@@ -17,29 +16,14 @@ import { Logger } from "../utils/logger";
 import { getAppInfo, getDeviceFiles } from "./devices";
 import { platform } from "os";
 
-ipcMain.on("sideload_folder", async (event, args) => {
-  try {
-    sideloadFolder(args);
-  } catch (ex) {
-    globals.win.webContents.send("sideload_folder_progress", {
-      items: [
-        {
-          key: "error",
-          text: "Unexpected error - " + ex,
-          started: true,
-          loading: true,
-          status: false,
-          show: true,
-        },
-      ],
-      done: true,
-      success: false,
-      error: ex,
-    });
-  }
-});
+export function bind(ipcMain) {
+  ipcMain.on("sideload_folder", sideloadFolder);
+  ipcMain.on("uninstall_app", uninstallApp);
+  ipcMain.on("sideload_local_apk", sideLoadLocalApk);
+  ipcMain.on("sideload_local_folder", sideLoadLocalFolder);
+}
 
-async function sideloadFolder(args) {
+async function sideloadFolder(event, args) {
   const logger = new Logger("Sideload");
   logger.info("args:", args);
 
@@ -363,7 +347,7 @@ async function sideloadFolder(args) {
   });
 }
 
-ipcMain.on("uninstall_app", async (event, args) => {
+async function uninstallApp(event, args) {
   const logger = new Logger("Uninstall");
   logger.info("args:", args);
 
@@ -437,7 +421,7 @@ ipcMain.on("uninstall_app", async (event, args) => {
     task: "uninstall",
     packageName: packageName,
   });
-});
+}
 
 function updateTask(tasks, key, started, loading, status, text) {
   const task = tasks.filter((x) => x.key === key)[0];
@@ -512,7 +496,7 @@ export async function adbPull(src, dst) {
   }
 }
 
-ipcMain.on("sideload_local_apk", async (event, args) => {
+async function sideLoadLocalApk(event, args) {
   const logger = new Logger("Sideload APK");
   logger.info("args:", args);
 
@@ -536,9 +520,9 @@ ipcMain.on("sideload_local_apk", async (event, args) => {
   };
 
   sideloadFolder(sideloadArgs);
-});
+}
 
-ipcMain.on("sideload_local_folder", async (event, args) => {
+async function sideLoadLocalFolder(event, args) {
   const logger = new Logger("Sideload Folder");
   logger.info("args:", args);
 
@@ -562,4 +546,4 @@ ipcMain.on("sideload_local_folder", async (event, args) => {
   };
 
   sideloadFolder(sideloadArgs);
-});
+}

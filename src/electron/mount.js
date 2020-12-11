@@ -1,4 +1,3 @@
-import { ipcMain } from "electron";
 import { writeFileSync } from "fs";
 import fetch from "node-fetch";
 import path from "path";
@@ -10,7 +9,14 @@ import settings from "electron-settings";
 import { check, list as rcloneList } from "./rclone";
 import { getInstalledApps } from "./devices";
 
-ipcMain.on("check_mount", async (event) => {
+export function bind(ipcMain) {
+  ipcMain.on("check_mount", checkMount);
+  ipcMain.on("ls_dir", listDir);
+  ipcMain.on("check_folder", checkFolder);
+  ipcMain.on("get_installed_apps", getInstalledAppsFromDevice);
+}
+
+async function checkMount(event) {
   if (await check()) {
     event.reply("check_mount", {
       success: true,
@@ -19,7 +25,7 @@ ipcMain.on("check_mount", async (event) => {
   } else {
     connectMount(event);
   }
-});
+}
 
 async function connectMount(event) {
   try {
@@ -155,7 +161,7 @@ function parseList(folder, items, installedApps) {
   return list;
 }
 
-ipcMain.on("ls_dir", async (event, args) => {
+async function listDir(event, args) {
   try {
     const items = await list(args.path);
     event.reply("ls_dir", {
@@ -168,9 +174,9 @@ ipcMain.on("ls_dir", async (event, args) => {
       error: e,
     });
   }
-});
+}
 
-ipcMain.on("check_folder", async (event, args) => {
+async function checkFolder(event, args) {
   const files = await rcloneList(args.path, { recurse: true });
 
   let totalSize = 0;
@@ -198,7 +204,7 @@ ipcMain.on("check_folder", async (event, args) => {
     success: true,
     value: { path: args.path, apk: apkFiles[0], hasObb: hasFolders, totalSize },
   });
-});
+}
 
 function cleanUpFoldername(simpleName) {
   simpleName = simpleName.split("-QuestUnderground")[0];
@@ -211,9 +217,9 @@ function cleanUpFoldername(simpleName) {
   return simpleName;
 }
 
-ipcMain.on("get_installed_apps", async (event) => {
+async function getInstalledAppsFromDevice(event) {
   event.reply("get_installed_apps", {
     success: true,
     value: await getInstalledApps(),
   });
-});
+}

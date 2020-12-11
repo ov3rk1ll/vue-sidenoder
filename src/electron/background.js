@@ -1,7 +1,7 @@
 "use strict";
 /* global __static */
 
-import { app, protocol, BrowserWindow, Menu } from "electron";
+import { app, protocol, BrowserWindow, Menu, ipcMain } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import path from "path";
@@ -12,11 +12,17 @@ const isDevelopment = process.env.NODE_ENV !== "production";
 import globals from "./globals";
 globals.adb = adbkit.createClient();
 
-import "./check-deps";
-import "./devices";
-import "./mount";
-import "./sideload";
-import "./settings";
+import { bind as depsBind } from "./check-deps";
+import { bind as deviceBind } from "./devices";
+import { bind as mountBind } from "./mount";
+import { bind as sideloadBind } from "./sideload";
+import { bind as settingsBind } from "./settings";
+
+depsBind(ipcMain);
+deviceBind(ipcMain);
+mountBind(ipcMain);
+sideloadBind(ipcMain);
+settingsBind(ipcMain);
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([

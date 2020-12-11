@@ -1,9 +1,12 @@
-import { ipcMain } from "electron";
 import adbkit from "@devicefarmer/adbkit";
 
 import globals from "./globals";
 
-ipcMain.on("check_device", (event) => {
+export function bind(ipcMain) {
+  ipcMain.on("check_device", checkDevice);
+}
+
+function checkDevice(event) {
   globals.adb.listDevices().then((devices) => {
     if (devices == null || devices.length == 0) {
       event.reply("check_device", {
@@ -19,7 +22,7 @@ ipcMain.on("check_device", (event) => {
       });
     }
   });
-});
+}
 
 export async function getInstalledApps() {
   if (!globals.device) {

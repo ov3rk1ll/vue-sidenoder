@@ -1,4 +1,3 @@
-import { ipcMain } from "electron";
 import { platform } from "os";
 import { sync as commandExistsSync } from "command-exists";
 import settings from "electron-settings";
@@ -6,21 +5,27 @@ import settings from "electron-settings";
 import { execShellCommand } from "../utils/shell";
 import { workdir } from "../utils/fs";
 
-ipcMain.on("check_deps_platform", (event) => {
+export function bind(ipcMain) {
+  ipcMain.on("check_deps_platform", checkDepsPlatform);
+  ipcMain.on("check_deps_work_dir", checkDepsWorkdir);
+  ipcMain.on("check_deps_rclone", checkDepsRclone);
+}
+
+function checkDepsPlatform(event) {
   event.reply("check_deps_platform", {
     status: true,
     value: "Platform: " + platform,
   });
-});
+}
 
-ipcMain.on("check_deps_work_dir", (event) => {
+function checkDepsWorkdir(event) {
   event.reply("check_deps_work_dir", {
     status: true,
     value: "Work dir: " + workdir(),
   });
-});
+}
 
-ipcMain.on("check_deps_rclone", async (event) => {
+async function checkDepsRclone(event) {
   let rclonePath = "rclone";
   if (await settings.has("rclone")) {
     rclonePath = await settings.get("rclone");
@@ -40,4 +45,4 @@ ipcMain.on("check_deps_rclone", async (event) => {
     status: exists,
     value: exists ? "Rclone detected - " + version : "Install Rclone globally!",
   });
-});
+}
