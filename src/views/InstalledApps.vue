@@ -1,11 +1,6 @@
 <template>
   <div>
-    <div class="loading" v-if="loading">
-      <b-spinner
-        style="width: 5rem; height: 5rem"
-        label="Large Spinner"
-      ></b-spinner>
-    </div>
+    <CenterSpinner v-if="loading" />
     <div class="installed" v-if="!loading">
       <h1>
         Installed apps
@@ -89,3 +84,13 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: -5rem;
+  margin-left: -5rem;
+}
+</style>

@@ -1,11 +1,6 @@
 <template>
   <div>
-    <div class="loading" v-if="loading">
-      <b-spinner
-        style="width: 5rem; height: 5rem"
-        label="Large Spinner"
-      ></b-spinner>
-    </div>
+    <CenterSpinner v-if="loading" />
     <div class="browse" v-if="!loading">
       <div class="d-flex">
         <div class="flex-fill">
