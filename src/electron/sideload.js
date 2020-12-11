@@ -329,7 +329,10 @@ async function sideloadFolder(args) {
     updateTask(tasks, "copy_obb", true, true, false, "Copying OBB files...");
 
     const deviceObbFolder = `/sdcard/Android/obb/${packageName}`;
-    const obbFolder = path.join(tempFolder, packageName);
+    let obbFolder = path.join(tempFolder, packageName);
+    if (args.local) {
+      obbFolder = path.join(path.dirname(args.path), packageName);
+    }
 
     await globals.adb
       .shell(globals.device.id, `rm -r "${deviceObbFolder}"`)
@@ -529,6 +532,32 @@ ipcMain.on("sideload_local_apk", async (event, args) => {
     },
     data: {
       hasObb: false,
+    },
+  };
+
+  sideloadFolder(sideloadArgs);
+});
+
+ipcMain.on("sideload_local_folder", async (event, args) => {
+  const logger = new Logger("Sideload Folder");
+  logger.info("args:", args);
+
+  const reader = ApkReader.readFile(args.path);
+  const manifest = reader.readManifestSync();
+
+  const installed = await getAppInfo(manifest.package);
+  logger.info("installed:", installed);
+
+  // Build data for sideload_folder
+  const sideloadArgs = {
+    local: true,
+    path: args.path,
+    app: {
+      packageName: manifest.package,
+      installedVersion: installed == null ? -1 : installed.versionCode,
+    },
+    data: {
+      hasObb: true,
     },
   };
 

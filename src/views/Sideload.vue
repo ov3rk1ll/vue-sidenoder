@@ -16,20 +16,30 @@
     <b-button variant="outline-primary" @click="$refs.apkfile.click()"
       >Select file</b-button
     >
-    <p class="rounded border my-2 p-2 bg-light text-dark">Info about apk</p>
+    <p class="rounded border my-2 p-2 bg-light text-dark">
+      Use this function to sideload an app that consists of a single APK
+      file.<br />For apps with additional OBB files, use the function below
+      instead!
+    </p>
 
     <h2>Sideload folder (APK + OBB files)</h2>
     <input
       type="file"
       ref="folder"
       style="display: none"
+      nwdirectory
       webkitdirectory
       directory
+      @change="onFolderSelected($event)"
     />
     <b-button variant="outline-primary" @click="$refs.folder.click()"
       >Select folder</b-button
     >
-    <p class="rounded border my-2 p-2 bg-light text-dark">Info about folder</p>
+    <p class="rounded border my-2 p-2 bg-light text-dark">
+      Use this function to sideload a folder containing an APK files and
+      additional OBB files.<br />To install a single APK files, use the function
+      above instead!
+    </p>
 
     <SideloadModal />
   </div>
@@ -60,6 +70,14 @@ export default {
       });
 
       this.$refs.apkfile.value = "";
+    },
+    onFolderSelected($event) {
+      this.$bvModal.show("bv-modal-sideload");
+      ipcRenderer.send("sideload_local_folder", {
+        path: $event.target.files[0].path,
+      });
+
+      this.$refs.folder.value = "";
     },
   },
 };
