@@ -61,20 +61,21 @@
 
       <h2 v-if="error">{{ error }}</h2>
 
-      <b-row>
-        <div
-          class="mb-2 col-12 col-md-4 col-lg-3 col-xl-2 item"
-          v-for="item in filteredItems"
-          :key="item.name"
-          v-bind:class="{
-            'tag-installed': item.installedVersion != -1,
-            'tag-update':
-              item.installedVersion != -1 &&
-              item.installedVersion < item.versionCode,
-          }"
-        >
-          <Game :item="item" />
-        </div>
+      <b-row class="mx-0">
+        <template v-for="item in filteredItems">
+          <div
+            v-bind:key="item.name"
+            class="px-1 mb-2 col-12 col-md-4 col-lg-3 col-xl-2"
+            v-bind:class="{
+              'tag-installed': item.installedVersion != -1,
+              'tag-update':
+                item.installedVersion != -1 &&
+                item.installedVersion < item.versionCode,
+            }"
+          >
+            <Game :item="item" class="p-0" />
+          </div>
+        </template>
       </b-row>
     </div>
     <SideloadModal />

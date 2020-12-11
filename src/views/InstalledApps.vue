@@ -1,18 +1,31 @@
 <template>
-  <div class="about">
-    <h1>This is a list of installed apps</h1>
-    <b-table striped hover :fields="fields" :items="items">
-      <template #cell(flags)="data">
-        {{ data.item.debug ? "DEBUG" : "" }}
-        {{ data.item.system ? "SYSTEM" : "" }}
-      </template>
-      <template #cell(actions)="data">
-        <b-button size="sm" variant="danger" @click="uninstall(data.item)"
-          >Uninstall</b-button
+  <div>
+    <div class="loading" v-if="loading">
+      <b-spinner
+        style="width: 5rem; height: 5rem;"
+        label="Large Spinner"
+      ></b-spinner>
+    </div>
+    <div class="installed" v-if="!loading">
+      <h1>
+        Installed apps
+        <small class="text-muted" v-if="!loading"
+          >{{ items.length }} apps</small
         >
-      </template>
-    </b-table>
-    <SideloadModal />
+      </h1>
+      <b-table striped hover :fields="fields" :items="items">
+        <template #cell(flags)="data">
+          {{ data.item.debug ? "DEBUG" : "" }}
+          {{ data.item.system ? "SYSTEM" : "" }}
+        </template>
+        <template #cell(actions)="data">
+          <b-button size="sm" variant="danger" @click="uninstall(data.item)"
+            >Uninstall</b-button
+          >
+        </template>
+      </b-table>
+      <SideloadModal />
+    </div>
   </div>
 </template>
 
@@ -23,6 +36,7 @@ export default {
   name: "InstalledApps",
   data: function() {
     return {
+      loading: false,
       fields: [
         "packageName",
         "versionCode",

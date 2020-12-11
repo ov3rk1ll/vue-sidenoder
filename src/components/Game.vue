@@ -5,7 +5,6 @@
     img-alt="Image"
     img-top
     tag="article"
-    class="mx-1"
   >
     <div class="ribbon" v-if="item.mp">MP</div>
     <b-card-text></b-card-text>
@@ -145,7 +144,7 @@ export default {
   overflow: hidden;
 }
 .card-body {
-  padding: 0.5rem 0.5rem 1.25rem 0.5rem;
+  padding: 0.5rem 0.5rem 0.5rem 0.5rem;
 }
 .card-title {
   margin-bottom: 0.25rem;
