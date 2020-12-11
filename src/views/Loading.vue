@@ -104,9 +104,9 @@ export default {
       this.success = allSuccess;
 
       if (this.completed && this.success) {
-        /*setTimeout(() => {
+        setTimeout(() => {
           this.$router.push({ path: "browse" });
-        }, 1000);*/
+        }, 1000);
       }
     },
     onRcloneSelected($event) {
