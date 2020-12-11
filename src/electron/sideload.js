@@ -1,5 +1,5 @@
 import { ipcMain } from "electron";
-import { existsSync, statSync } from "fs";
+import { existsSync, statSync, createWriteStream } from "fs";
 import adbkit from "@devicefarmer/adbkit";
 import path from "path";
 import ApkReader from "node-apk-parser";
@@ -7,10 +7,15 @@ import ApkReader from "node-apk-parser";
 import globals from "./globals";
 import { copy, waitForJob } from "./rclone";
 import { formatEta, formatBytes } from "../utils/formatter";
-import { mkdirsSync, deleteFolderRecursive, workdir, getFiles } from "../utils/fs";
+import {
+  mkdirsSync,
+  deleteFolderRecursive,
+  workdir,
+  getFiles,
+} from "../utils/fs";
 import { Logger } from "../utils/logger";
-import { execShellCommand } from "../utils/shell";
-import { getAppInfo } from "./devices";
+import { getAppInfo, getDeviceFiles } from "./devices";
+import { platform } from "os";
 
 ipcMain.on("sideload_folder", async (event, args) => {
   try {
@@ -225,7 +230,7 @@ async function sideloadFolder(args) {
     );
 
     if (!apkFileExists) {
-      // TODO: Cancel because download failed
+      // Cancel because download failed
       globals.win.webContents.send("sideload_folder_progress", {
         items: tasks,
         done: true,
@@ -282,7 +287,7 @@ async function sideloadFolder(args) {
     mkdirsSync(appdataFolder, { recursive: true });
 
     updateTask(tasks, "backup", true, true);
-    await adbPull(`/sdcard/Android/data/${packageName}`, appdataFolder)
+    await adbPull(`/sdcard/Android/data/${packageName}`, appdataFolder);
     updateTask(tasks, "backup", true, false, true);
 
     updateTask(tasks, "uninstall", true, true);
@@ -461,8 +466,10 @@ async function installApp(deviceId, apkFile) {
   }
 }
 
-async function adbPush(src, dst, cb) {
-  if (!cb) { cb = () => { } }
+export async function adbPush(src, dst, cb) {
+  if (!cb) {
+    cb = () => { };
+  }
   const files = await getFiles(src);
   let totalSize = 0;
   for (const file of files) {
@@ -471,17 +478,35 @@ async function adbPush(src, dst, cb) {
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
     const relName = file.slice(src.length + 1);
+    let dstFile = dst + "/" + relName;
+    if (platform() === "win32") {
+      // Fix path separator on Windows (getFiles returns \ but we need / on the Android side)
+      dstFile = dstFile.replace(/\\/g, "/");
+    }
     cb(i, files.length, totalSize, `Sending ${relName}`);
-    await globals.adb.push(globals.device.id, file, dst + "/" + relName);
+    await globals.adb.push(globals.device.id, file, dstFile);
     cb(i, files.length, totalSize, relName + " - Done");
   }
 }
 
-async function adbPull(src, dst) {
-  // TODO: implement with adbkit
-  await execShellCommand(
-    `adb pull "${src}" "${dst}"`
-  );
+export async function adbPull(src, dst) {
+  const files = await getDeviceFiles(globals.device.id, src);
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const relName = file.slice(src.length + 1);
+    const dstFile = path.join(dst, relName);
+    // Create folder as needed
+    await mkdirsSync(path.dirname(dstFile));
+    await globals.adb.pull(globals.device.id, file).then(function (transfer) {
+      return new Promise(function (resolve, reject) {
+        transfer.on("end", function () {
+          resolve(dstFile);
+        });
+        transfer.on("error", reject);
+        transfer.pipe(createWriteStream(dstFile));
+      });
+    });
+  }
 }
 
 ipcMain.on("sideload_local_apk", async (event, args) => {
