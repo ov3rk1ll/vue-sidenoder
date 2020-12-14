@@ -7,10 +7,13 @@
 
       <b-collapse id="nav-collapse" is-nav>
         <b-navbar-nav>
-          <b-nav-item :to="{ path: '/browse' }" exact>Browse</b-nav-item>
-          <b-nav-item :to="{ path: '/installed' }">Installed apps</b-nav-item>
-          <b-nav-item :to="{ path: '/sideload' }">Sideload app</b-nav-item>
-          <b-nav-item :to="{ path: '/about' }">About</b-nav-item>
+          <b-nav-item
+            v-for="item of navItems"
+            :key="item.name"
+            :to="{ path: item.path }"
+            exact
+            >{{ item.name }}</b-nav-item
+          >
         </b-navbar-nav>
 
         <!-- Right aligned nav items -->
@@ -24,10 +27,14 @@
 </template>
 
 <script>
+import { routes } from "../router";
+
 export default {
   name: "Navbar",
-  props: {
-    msg: String,
+  data: () => {
+    return {
+      navItems: routes.filter((x) => x.showInNav),
+    };
   },
 };
 </script>
