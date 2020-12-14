@@ -25,16 +25,29 @@
       >
       to this app.
     </p>
+    <p><pre>{{settings}}</pre></p>
   </div>
 </template>
 
 <script>
+const { ipcRenderer } = require("electron");
+
 export default {
   name: "About",
   data: () => {
     return {
       version: process.env.PACKAGE_VERSION,
+      settings: {},
     };
   },
+   mounted: function() {
+    this.$nextTick(function() {
+      ipcRenderer.on("get_all_setting", (e, args) => {
+        this.settings = args.value;
+      });
+
+       ipcRenderer.send("get_all_setting", null);
+    })
+   },
 };
 </script>

@@ -27,8 +27,8 @@ function checkDepsWorkdir(event) {
 
 async function checkDepsRclone(event) {
   let rclonePath = "rclone";
-  if (await settings.has("rclone")) {
-    rclonePath = await settings.get("rclone");
+  if (settings.hasSync("rclone.executable")) {
+    rclonePath = settings.getSync("rclone.executable");
   }
   const exists = commandExistsSync(rclonePath);
   let version = null;

@@ -7,6 +7,7 @@ import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import path from "path";
 import open from "open";
 import adbkit from "@devicefarmer/adbkit";
+import settings from "electron-settings";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 
@@ -43,7 +44,7 @@ async function createWindow() {
     icon: path.join(__static, "icon.png"),
   });
 
-  globals.win.webContents.on('new-window', function (event, url) {
+  globals.win.webContents.on("new-window", function(event, url) {
     event.preventDefault();
     open(url);
   });
@@ -81,6 +82,8 @@ app.on("activate", () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on("ready", async () => {
+  console.log("Reading settings from", settings.file());
+
   if (isDevelopment && !process.env.IS_TEST) {
     // Install Vue Devtools
     try {

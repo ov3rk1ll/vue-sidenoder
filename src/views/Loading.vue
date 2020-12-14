@@ -109,7 +109,10 @@ export default {
       ipcRenderer.once("put_setting", () => {
         this.runCheck();
       });
-      ipcRenderer.send("put_setting", { key: "rclone", value: path });
+      ipcRenderer.send("put_setting", {
+        key: "rclone.executable",
+        value: path,
+      });
     },
   },
 };

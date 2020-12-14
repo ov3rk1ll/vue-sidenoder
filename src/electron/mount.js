@@ -29,30 +29,37 @@ async function checkMount(event) {
 
 async function connectMount(event) {
   try {
-    let key = await fetch(
-      "https://raw.githubusercontent.com/whitewhidow/quest-sideloader-linux/main/extras/k"
-    )
-      .then((resp) => resp.text())
-      .then((content) => Buffer.from(content, "base64").toString("ascii"));
+    let cpath = null;
+    if (await settings.has("rclone.config")) {
+      cpath = await settings.get("rclone.config");
+    }
 
-    const kpath = path.join(tmpdir(), "k");
-    writeFileSync(kpath, key);
+    if (cpath == "" || cpath == null) {
+      let key = await fetch(
+        "https://raw.githubusercontent.com/whitewhidow/quest-sideloader-linux/main/extras/k"
+      )
+        .then((resp) => resp.text())
+        .then((content) => Buffer.from(content, "base64").toString("ascii"));
 
-    let config = await fetch(
-      "https://raw.githubusercontent.com/whitewhidow/quest-sideloader-linux/main/extras/c"
-    )
-      .then((resp) => resp.text())
-      .then((content) => Buffer.from(content, "base64").toString("ascii"));
+      const kpath = path.join(tmpdir(), "k");
+      writeFileSync(kpath, key);
 
-    config = config.replace("XXX", kpath);
-    const cpath = path.join(tmpdir(), "c");
-    writeFileSync(cpath, config);
+      let config = await fetch(
+        "https://raw.githubusercontent.com/whitewhidow/quest-sideloader-linux/main/extras/c"
+      )
+        .then((resp) => resp.text())
+        .then((content) => Buffer.from(content, "base64").toString("ascii"));
+
+      config = config.replace("XXX", kpath);
+      cpath = path.join(tmpdir(), "c");
+      writeFileSync(cpath, config);
+    }
 
     let rclonePath = "rclone";
-    if (await settings.has("rclone")) {
-      rclonePath = await settings.get("rclone");
+    if (await settings.has("rclone.executable")) {
+      rclonePath = await settings.get("rclone.executable");
     }
-    const cmd = `${rclonePath} rcd --rc-no-auth --config ${cpath}`;
+    const cmd = `${rclonePath} rcd --rc-no-auth --config "${cpath}"`;
     console.log("Start Rclone in RC mode:", cmd);
     exec(cmd);
 
@@ -79,7 +86,11 @@ export async function stopMount() {
 
 async function list(dir) {
   if (dir === "/") {
-    dir = "";
+    if (await settings.has("rclone.root")) {
+      dir = await settings.get("rclone.root");
+    } else {
+      dir = "";
+    }
   }
 
   let list = await rcloneList(dir);
@@ -92,7 +103,7 @@ async function list(dir) {
 function parseList(folder, items, installedApps) {
   const list = [];
   for (const item of items) {
-    if (item.Path.startsWith(".") || !item.IsDir) {
+    if (item.Name.startsWith(".") || !item.IsDir) {
       continue;
     }
 
@@ -110,7 +121,7 @@ function parseList(folder, items, installedApps) {
       infoLink: null,
       info: null,
       createdAt: new Date(item.ModTime),
-      filePath: path.join(folder, item.Path).replace(/\\/g, "/"),
+      filePath: item.Path.replace(/\\/g, "/"),
     };
 
     if (new RegExp(".* -steam-").test(item.Name)) {

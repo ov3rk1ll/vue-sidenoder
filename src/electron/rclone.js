@@ -1,6 +1,8 @@
 import fetch from "node-fetch";
+import settings from "electron-settings";
+import { Logger } from "../utils/logger";
 
-import globals from "./globals";
+const logger = new Logger("Rclone");
 
 export async function check() {
   try {
@@ -16,7 +18,7 @@ export async function check() {
 export async function list(path, opt = null) {
   if (opt == null) opt = {};
   const body = {
-    fs: globals.rcloneRoot + ":",
+    fs: settings.getSync("rclone.mirror") + ":",
     remote: path,
     opt: opt,
   };
@@ -27,12 +29,13 @@ export async function list(path, opt = null) {
   })
     .then((resp) => resp.json())
     .then((resp) => resp.list);
+
   return list;
 }
 
 export async function copyfile(src, dst) {
   const body = {
-    srcFs: globals.rcloneRoot + ":",
+    srcFs: settings.getSync("rclone.mirror") + ":",
     srcRemote: src,
     dstFs: "/",
     dstRemote: dst,
@@ -53,7 +56,7 @@ export async function copyfile(src, dst) {
 
 export async function copy(src, dst) {
   const body = {
-    srcFs: globals.rcloneRoot + ":" + src,
+    srcFs: settings.getSync("rclone.mirror") + ":" + src,
     dstFs: dst,
     _async: true,
   };
