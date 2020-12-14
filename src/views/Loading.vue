@@ -105,7 +105,6 @@ export default {
     },
     onRcloneSelected($event) {
       const path = $event.target.files[0].path;
-      console.log(path);
 
       ipcRenderer.once("put_setting", () => {
         this.runCheck();

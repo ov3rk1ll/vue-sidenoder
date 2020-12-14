@@ -151,7 +151,12 @@ function parseList(folder, items, installedApps) {
 
     const versionName = entry.simpleName.match(/v(\d\S*)/);
     if (versionName == null) {
-      console.log("parse versionName failed for", entry.simpleName);
+      const versionNameAlt = entry.simpleName.match(/\[(\d\S*)\]/);
+      if (versionNameAlt == null) {
+        console.log("parse versionName failed for", entry.simpleName);
+      } else {
+        entry.versionName = "v" + versionNameAlt[1];
+      }
     } else {
       entry.versionName = "v" + versionName[1];
     }

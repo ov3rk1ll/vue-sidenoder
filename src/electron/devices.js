@@ -30,7 +30,6 @@ export async function getInstalledApps() {
   }
 
   const apps = await globals.adb.getPackages(globals.device.id, "-3");
-  console.log("getInstalledApps got " + apps.length + " apps");
 
   const appInfo = {};
 

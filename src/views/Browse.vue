@@ -124,7 +124,6 @@ export default {
 
       ipcRenderer.on("sideload_folder_progress", (e, args) => {
         if (args.done && args.success) {
-          console.log("Browse", "sideload_folder_progress", args);
           if (args.task == "install") {
             this.items
               .filter((x) => x.packageName == args.packageName)
@@ -140,12 +139,6 @@ export default {
                 item.installedVersion = -1;
               });
           }
-          /*
-          packageName: "com.idumpling.a_lullaby_of_colors"
-          task: "uninstall"
-          const target =
-          // TODO: Update list if sideload is args.done: true
-          */
         }
       });
     });
