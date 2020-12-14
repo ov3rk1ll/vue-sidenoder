@@ -1,54 +1,63 @@
 <template>
   <b-card
-    :title="item.simpleName"
+    no-body
     :img-src="item.imagePath"
-    img-alt="Image"
+    :img-alt="item.simpleName"
     img-top
     tag="article"
   >
     <div class="ribbon" v-if="item.mp">MP</div>
-
-    <b-card-text>
-      <b-button
-        class="card-link"
-        href="#"
-        variant="success"
-        v-on:click="open(item)"
-        v-if="
-          item.installedVersion != -1 &&
-            item.installedVersion < item.versionCode
-        "
-        :disabled="loading"
-        ><b-spinner small v-if="loading"></b-spinner> Update</b-button
+    <b-card-body>
+      <b-link
+        :href="item.infoLink"
+        target="_blank"
+        class="text-body"
+        v-if="item.infoLink"
+        ><h4>{{ item.simpleName }}</h4></b-link
       >
-      <b-button
-        class="card-link"
-        href="#"
-        variant="default"
-        v-on:click="open(item)"
-        v-if="item.installedVersion != -1"
-        :disabled="loading"
-        ><b-spinner small v-if="loading"></b-spinner> Re-Install</b-button
-      >
-      <b-button
-        class="card-link"
-        href="#"
-        variant="primary"
-        v-on:click="open(item)"
-        v-if="item.installedVersion == -1"
-        :disabled="loading"
-        ><b-spinner small v-if="loading"></b-spinner> Install</b-button
-      >
-      <b-button
-        class="card-link"
-        href="#"
-        variant="warning"
-        v-on:click="uninstall(item)"
-        v-if="item.installedVersion != -1"
-        :disabled="loading"
-        ><b-spinner small v-if="loading"></b-spinner> Uninstall</b-button
-      >
-    </b-card-text>
+      <h4 v-else>{{ item.simpleName }}</h4>
+      <b-card-text>
+        <b-button
+          class="card-link"
+          href="#"
+          variant="success"
+          v-on:click="open(item)"
+          v-if="
+            item.installedVersion != -1 &&
+              item.installedVersion < item.versionCode
+          "
+          :disabled="loading"
+          ><b-spinner small v-if="loading"></b-spinner> Update</b-button
+        >
+        <b-button
+          class="card-link"
+          href="#"
+          variant="default"
+          v-on:click="open(item)"
+          v-if="item.installedVersion != -1"
+          :disabled="loading"
+          ><b-spinner small v-if="loading"></b-spinner> Re-Install</b-button
+        >
+        <b-button
+          class="card-link"
+          href="#"
+          variant="primary"
+          v-on:click="open(item)"
+          v-if="item.installedVersion == -1"
+          :disabled="loading"
+          ><b-spinner small v-if="loading"></b-spinner> Install</b-button
+        >
+        <b-button
+          class="card-link"
+          href="#"
+          variant="warning"
+          v-on:click="uninstall(item)"
+          v-if="item.installedVersion != -1"
+          :disabled="loading"
+          ><b-spinner small v-if="loading"></b-spinner> Uninstall</b-button
+        >
+      </b-card-text>
+    </b-card-body>
 
     <template #footer>
       <small class="d-flex"
@@ -98,8 +107,6 @@ export default {
               size: "lg",
               buttonSize: "lg",
               okVariant: "primary",
-              // headerClass: "p-2 border-bottom-0",
-              // footerClass: "p-2 border-top-0",
               centered: true,
             })
             .then((value) => {
