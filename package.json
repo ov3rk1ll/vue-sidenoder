@@ -1,6 +1,6 @@
 {
   "name": "vue-sidenoder",
-  "version": "0.1.0-DEV2",
+  "version": "0.1.0-DEV3",
   "private": true,
   "author": {
     "name": "ov3rk1ll",
@@ -30,6 +30,7 @@
     "electron-settings": "^4.0.2",
     "node-apk-parser": "^0.2.3",
     "node-fetch": "^2.6.1",
+    "open": "^6.4.0",
     "vue": "^2.6.12",
     "vue-router": "^3.2.0"
   },

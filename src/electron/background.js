@@ -5,6 +5,7 @@ import { app, protocol, BrowserWindow, Menu, ipcMain } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import path from "path";
+import open from "open";
 import adbkit from "@devicefarmer/adbkit";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
@@ -40,6 +41,11 @@ async function createWindow() {
       nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
     },
     icon: path.join(__static, "icon.png"),
+  });
+
+  globals.win.webContents.on('new-window', function (event, url) {
+    event.preventDefault();
+    open(url);
   });
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
