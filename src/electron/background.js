@@ -14,7 +14,7 @@ globals.adb = adbkit.createClient();
 
 import { bind as depsBind } from "./check-deps";
 import { bind as deviceBind } from "./devices";
-import { bind as mountBind } from "./mount";
+import { bind as mountBind, stopMount } from "./mount";
 import { bind as sideloadBind } from "./sideload";
 import { bind as settingsBind } from "./settings";
 
@@ -55,7 +55,9 @@ async function createWindow() {
 }
 
 // Quit when all windows are closed.
-app.on("window-all-closed", () => {
+app.on("window-all-closed", async () => {
+  await stopMount();
+
   // On macOS it is common for applications and their menu bar
   // to stay active until the user quits explicitly with Cmd + Q
   if (process.platform !== "darwin") {

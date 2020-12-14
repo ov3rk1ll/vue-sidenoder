@@ -65,6 +65,18 @@ async function connectMount(event) {
   }
 }
 
+export async function stopMount() {
+  if (!(await check())) {
+    return true;
+  } else {
+    console.log("sending quit to rclone");
+    await fetch("http://127.0.0.1:5572/core/quit", {
+      method: "post",
+    });
+    return true;
+  }
+}
+
 async function list(dir) {
   if (dir === "/") {
     dir = "";
