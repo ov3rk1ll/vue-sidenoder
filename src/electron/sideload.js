@@ -298,9 +298,17 @@ async function sideloadFolder(event, args) {
         ? "Installed app"
         : "Installation failed - " + freshInstall
     );
-  }
 
-  // TODO: Break on error
+    if (freshInstall == undefined) {
+      globals.win.webContents.send("sideload_folder_progress", {
+        items: tasks,
+        done: true,
+        success: false,
+        error: "Unexpected install error",
+      });
+      return;
+    }
+  }
 
   if (!args.data.hasObb) {
     updateTask(
