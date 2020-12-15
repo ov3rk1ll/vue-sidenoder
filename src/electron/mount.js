@@ -30,8 +30,8 @@ async function checkMount(event) {
 async function connectMount(event) {
   try {
     let cpath = null;
-    if (await settings.has("rclone.config")) {
-      cpath = await settings.get("rclone.config");
+    if (settings.hasSync("rclone.config")) {
+      cpath = settings.getSync("rclone.config");
     }
 
     if (cpath == "" || cpath == null) {
@@ -56,8 +56,8 @@ async function connectMount(event) {
     }
 
     let rclonePath = "rclone";
-    if (await settings.has("rclone.executable")) {
-      rclonePath = await settings.get("rclone.executable");
+    if (settings.hasSync("rclone.executable")) {
+      rclonePath = settings.getSync("rclone.executable");
     }
     const cmd = `${rclonePath} rcd --rc-no-auth --config "${cpath}"`;
     console.log("Start Rclone in RC mode:", cmd);
@@ -86,8 +86,8 @@ export async function stopMount() {
 
 async function list(dir) {
   if (dir === "/") {
-    if (await settings.has("rclone.root")) {
-      dir = await settings.get("rclone.root");
+    if (settings.hasSync("rclone.root")) {
+      dir = settings.getSync("rclone.root");
     } else {
       dir = "";
     }

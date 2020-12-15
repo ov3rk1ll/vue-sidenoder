@@ -25,7 +25,7 @@ export function bind(ipcMain) {
 }
 
 async function putSetting(event, args) {
-  await settings.set(args.key, args.value);
+  settings.setSync(args.key, args.value);
   event.reply("put_setting", {
     success: true,
     key: args.key,
@@ -33,7 +33,7 @@ async function putSetting(event, args) {
 }
 
 async function getSetting(event, args) {
-  const value = await settings.get(args.key);
+  const value = settings.getSync(args.key);
   event.reply("get_setting", {
     success: true,
     key: args.key,
@@ -42,7 +42,7 @@ async function getSetting(event, args) {
 }
 
 async function getAllSetting(event) {
-  const value = await settings.get();
+  const value = settings.getSync();
   event.reply("get_all_setting", {
     success: true,
     value: flatten(value),
