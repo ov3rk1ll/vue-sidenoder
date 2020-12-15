@@ -1,8 +1,5 @@
 import fetch from "node-fetch";
 import settings from "electron-settings";
-import { Logger } from "../utils/logger";
-
-const logger = new Logger("Rclone");
 
 export async function check() {
   try {

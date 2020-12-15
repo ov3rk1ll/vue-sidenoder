@@ -25,7 +25,7 @@
       >
       to this app.
     </p>
-    <p><pre>{{settings}}</pre></p>
+    <pre>{{ settings }}</pre>
   </div>
 </template>
 
@@ -40,14 +40,14 @@ export default {
       settings: {},
     };
   },
-   mounted: function() {
+  mounted: function() {
     this.$nextTick(function() {
       ipcRenderer.on("get_all_setting", (e, args) => {
         this.settings = args.value;
       });
 
-       ipcRenderer.send("get_all_setting", null);
-    })
-   },
+      ipcRenderer.send("get_all_setting", null);
+    });
+  },
 };
 </script>
