@@ -12,10 +12,9 @@
         :href="item.infoLink"
         target="_blank"
         class="text-body"
-        v-if="item.infoLink"
-        ><h4>{{ item.simpleName }}</h4></b-link
+        :disabled="!item.infoLink"
+        ><h5 :title="item.simpleName">{{ item.simpleName }}</h5></b-link
       >
-      <h4 v-else>{{ item.simpleName }}</h4>
       <b-card-text>
         <b-button
           class="card-link"
@@ -64,7 +63,10 @@
         ><div class="flex-fill">
           {{ item.versionName || item.versionCode }}
         </div>
-        <div>Updated {{ item.createdAt.toLocaleDateString() }}</div></small
+        <div>
+          <b-icon icon="clock"></b-icon>
+          {{ item.createdAt.toLocaleDateString() }}
+        </div></small
       >
     </template>
   </b-card>
@@ -151,10 +153,33 @@ export default {
 @import "@/style/main.scss";
 .card {
   overflow: hidden;
+  height: 100%;
 }
 .card-body {
   padding: 0.5rem 0.5rem 0.5rem 0.5rem;
+
+  h5 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  a.disabled {
+    cursor: default;
+    text-decoration: none;
+
+    :hover {
+      text-decoration: none;
+    }
+  }
 }
+
+.card-img-top {
+  width: 100%;
+  height: 46.74%;
+  object-fit: cover;
+}
+
 .card-title {
   margin-bottom: 0.25rem;
 }
@@ -163,6 +188,11 @@ export default {
 }
 .card-text {
   margin-bottom: 0.5rem;
+}
+
+.card-footer {
+  padding: 0.5rem;
+  white-space: nowrap;
 }
 
 .ribbon {

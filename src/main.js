@@ -1,7 +1,7 @@
 import Vue from "vue";
 import upperFirst from "lodash/upperFirst";
 import camelCase from "lodash/camelCase";
-import { BootstrapVue } from "bootstrap-vue";
+import { BootstrapVue, BootstrapVueIcons } from "bootstrap-vue";
 
 import App from "./App.vue";
 import "./style/main.scss";
@@ -10,6 +10,7 @@ import router from "./router";
 Vue.config.productionTip = false;
 
 Vue.use(BootstrapVue);
+Vue.use(BootstrapVueIcons);
 
 // globally register components
 const requireComponent = require.context(

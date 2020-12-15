@@ -5,17 +5,22 @@
       <div class="d-flex">
         <div class="flex-fill">
           <h1>
-            Browse
+            <b-icon icon="journal-text" /> Browse
             <small class="text-muted" v-if="!loading"
               >{{ filteredItems.length }} games</small
             >
           </h1>
         </div>
         <div>
-          <b-button variant="outline-light" @click="reload()">Refresh</b-button>
+          <b-button variant="outline-light" @click="reload()"
+            ><b-icon icon="arrow-repeat" /> Refresh</b-button
+          >
         </div>
       </div>
-      <b-input-group prepend="Search" class="mt-2 mb-4">
+      <b-input-group class="mt-2 mb-4">
+        <template #prepend>
+          <b-input-group-text> <b-icon icon="search"/></b-input-group-text>
+        </template>
         <b-form-input
           placeholder="Search..."
           v-model="query"
@@ -28,9 +33,10 @@
               query = '';
               updateList();
             "
-            >Clear</b-button
+            ><b-icon icon="x-circle" /> Clear</b-button
           >
-          <b-dropdown text="Filter" right>
+          <b-dropdown right>
+            <template #button-content><b-icon icon="funnel" /> Filter</template>
             <b-dropdown-form>
               <b-form-checkbox-group
                 v-model="filter"
@@ -39,7 +45,10 @@
               ></b-form-checkbox-group>
             </b-dropdown-form>
           </b-dropdown>
-          <b-dropdown :text="sortName" right>
+          <b-dropdown right>
+            <template #button-content
+              ><b-icon icon="filter" /> {{ sortName }}</template
+            >
             <b-dropdown-item-button
               v-for="o in sortOptions"
               :key="o.text"

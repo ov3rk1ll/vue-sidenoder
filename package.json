@@ -4,10 +4,10 @@
   "private": true,
   "author": {
     "name": "ov3rk1ll",
-    "email": "me@ov3rk1l.dev",
-    "url": "https://ov3rk1l.dev"
+    "email": "me@ov3rk1ll.dev",
+    "url": "https://ov3rk1ll.dev"
   },
-  "homepage": "https://ov3rk1l.dev",
+  "homepage": "https://ov3rk1ll.dev",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
@@ -69,7 +69,11 @@
     "parserOptions": {
       "parser": "babel-eslint"
     },
-    "rules": {}
+    "rules": {},
+    "ignorePatterns": [
+      "**/dist",
+      "**/dist_electron"
+    ]
   },
   "browserslist": [
     "> 1%",

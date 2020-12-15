@@ -1,7 +1,8 @@
 <template>
   <div class="about">
     <h1>
-      Vue Sideload <small class="text-muted">{{ version }}</small>
+      <b-icon icon="info-circle" /> Vue Sideload
+      <small class="text-muted">{{ version }}</small>
     </h1>
     <p class="lead">
       Based on

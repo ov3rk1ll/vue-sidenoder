@@ -12,7 +12,8 @@
             :key="item.name"
             :to="{ path: item.path }"
             exact
-            >{{ item.name }}</b-nav-item
+            ><b-icon v-if="item.icon" :icon="item.icon" />
+            {{ item.name }}</b-nav-item
           >
         </b-navbar-nav>
 

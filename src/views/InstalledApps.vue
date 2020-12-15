@@ -3,7 +3,7 @@
     <CenterSpinner v-if="loading" />
     <div class="installed" v-if="!loading">
       <h1>
-        Installed apps
+        <b-icon icon="cpu" /> Installed apps
         <small class="text-muted" v-if="!loading"
           >{{ items.length }} apps</small
         >
