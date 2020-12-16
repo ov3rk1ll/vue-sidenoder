@@ -8,8 +8,11 @@ import path from "path";
 import open from "open";
 import adbkit from "@devicefarmer/adbkit";
 import settings from "electron-settings";
+import unhandled from "electron-unhandled";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
+
+unhandled();
 
 import globals from "./globals";
 globals.adb = adbkit.createClient();
