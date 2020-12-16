@@ -13,7 +13,9 @@
         target="_blank"
         class="text-body"
         :disabled="!item.infoLink"
-        ><h5 :title="item.simpleName">{{ item.simpleName }}</h5></b-link
+        ><h5 :title="item.simpleName">
+          <b-spinner small v-if="loading"></b-spinner> {{ item.simpleName }}
+        </h5></b-link
       >
       <b-card-text>
         <b-button
@@ -26,7 +28,8 @@
               item.installedVersion < item.versionCode
           "
           :disabled="loading"
-          ><b-spinner small v-if="loading"></b-spinner> Update</b-button
+        >
+          Update</b-button
         >
         <b-button
           class="card-link"
@@ -35,7 +38,8 @@
           v-on:click="open(item)"
           v-if="item.installedVersion != -1"
           :disabled="loading"
-          ><b-spinner small v-if="loading"></b-spinner> Re-Install</b-button
+        >
+          Re-Install</b-button
         >
         <b-button
           class="card-link"
@@ -44,7 +48,8 @@
           v-on:click="open(item)"
           v-if="item.installedVersion == -1"
           :disabled="loading"
-          ><b-spinner small v-if="loading"></b-spinner> Install</b-button
+        >
+          Install</b-button
         >
         <b-button
           class="card-link"
@@ -53,7 +58,8 @@
           v-on:click="uninstall(item)"
           v-if="item.installedVersion != -1"
           :disabled="loading"
-          ><b-spinner small v-if="loading"></b-spinner> Uninstall</b-button
+        >
+          Uninstall</b-button
         >
       </b-card-text>
     </b-card-body>
@@ -132,8 +138,6 @@ export default {
           size: "lg",
           buttonSize: "lg",
           okVariant: "danger",
-          // headerClass: "p-2 border-bottom-0",
-          // footerClass: "p-2 border-top-0",
           centered: true,
         })
         .then((value) => {
@@ -184,7 +188,7 @@ export default {
   margin-bottom: 0.25rem;
 }
 .card-link + .card-link {
-  margin-left: 1.25rem;
+  margin-left: 0.5rem;
 }
 .card-text {
   margin-bottom: 0.5rem;
