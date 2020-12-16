@@ -34,7 +34,7 @@
     "flat": "^5.0.2",
     "node-apk-parser": "^0.2.3",
     "node-fetch": "^2.6.1",
-    "open": "^6.4.0",
+    "open": "^7.3.0",
     "vue": "^2.6.12",
     "vue-router": "^3.2.0"
   },
