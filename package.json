@@ -49,7 +49,7 @@
     "electron-icon-builder": "^1.0.2",
     "electron-unhandled": "^3.0.2",
     "eslint": "^6.7.2",
-    "eslint-plugin-vue": "^6.2.2",
+    "eslint-plugin-vue": "^7.3.0",
     "husky": "^5.0.6",
     "node-sass": "^5.0.0",
     "patch-package": "^6.2.2",
