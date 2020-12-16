@@ -18,15 +18,20 @@
         </div>
       </div>
       <b-input-group class="mt-2 mb-4">
-        <template #prepend>
-          <b-input-group-text> <b-icon icon="search"/></b-input-group-text>
-        </template>
+        <b-input-group-prepend>
+          <b-input-group-text class="border-0">
+            <b-icon icon="search" />
+          </b-input-group-text>
+        </b-input-group-prepend>
+
         <b-form-input
           placeholder="Search..."
+          class="border-0"
           v-model="query"
           @keyup.enter="updateList()"
         ></b-form-input>
-        <template #append>
+
+        <b-input-group-append>
           <b-button
             :disabled="query == ''"
             @click="
@@ -36,13 +41,26 @@
             ><b-icon icon="x-circle" /> Clear</b-button
           >
           <b-dropdown right>
-            <template #button-content><b-icon icon="funnel" /> Filter</template>
+            <template #button-content
+              ><b-icon
+                icon="funnel"
+                :variant="filter !== filterDefault ? 'warning' : 'default'"
+              />
+              Filter</template
+            >
             <b-dropdown-form>
               <b-form-checkbox-group
                 v-model="filter"
                 :options="filterOptions"
                 stacked
               ></b-form-checkbox-group>
+              <b-button
+                block
+                size="sm"
+                class="mt-2"
+                @click="filter = filterDefault"
+                >Reset</b-button
+              >
             </b-dropdown-form>
           </b-dropdown>
           <b-dropdown right>
@@ -60,7 +78,7 @@
               >{{ o.text }}</b-dropdown-item-button
             >
           </b-dropdown>
-        </template>
+        </b-input-group-append>
       </b-input-group>
 
       <h2 v-if="error">{{ error }}</h2>
@@ -97,14 +115,15 @@ export default {
       filteredItems: [],
       loading: false,
       query: "",
-      filter: ["uninstalled", "installed", "update"],
+      filterDefault: ["uninstalled", "installed", "update"],
+      filter: null,
       filterOptions: [
         { text: "Show not-installed", value: "uninstalled" },
         { text: "Show installed", value: "installed" },
         { text: "Show updates", value: "update" },
       ],
-      sort: { key: "name", asc: true },
-      sortName: "Sort by name ↓",
+      sort: null,
+      sortName: null,
       sortOptions: [
         { text: "Sort by name ↓", value: { key: "name", asc: true } },
         { text: "Sort by name ↑", value: { key: "name", asc: false } },
@@ -113,6 +132,31 @@ export default {
       ],
       error: null,
     };
+  },
+  beforeMount: function() {
+    // Apply from setting
+    const sortSettingJson = localStorage.getItem("browse-sort");
+    if (sortSettingJson) {
+      const sortSetting = JSON.parse(sortSettingJson);
+      const selected = this.sortOptions.filter(
+        (x) =>
+          x.value.key === sortSetting.key && x.value.asc === sortSetting.asc
+      );
+      if (selected && selected.length > 0) {
+        this.sort = selected[0].value;
+        this.sortName = selected[0].text;
+      }
+    }
+
+    // Apply default if nothing is set
+    if (this.sort === null) {
+      this.sort = this.sortOptions[0].value;
+      this.sortName = this.sortOptions[0].text;
+    }
+
+    if (this.filter === null) {
+      this.filter = this.filterDefault;
+    }
   },
   mounted: function() {
     this.$nextTick(function() {
@@ -154,9 +198,11 @@ export default {
   },
   watch: {
     filter: function() {
+      localStorage.setItem("browse-filter", JSON.stringify(this.filter));
       this.updateList();
     },
     sort: function() {
+      localStorage.setItem("browse-sort", JSON.stringify(this.sort));
       this.updateList();
     },
   },
@@ -225,5 +271,8 @@ export default {
 }
 .custom-control-label {
   white-space: nowrap;
+}
+input.form-control {
+  margin-bottom: -1px !important;
 }
 </style>
