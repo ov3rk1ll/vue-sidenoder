@@ -106,6 +106,7 @@
 
 <script>
 const { ipcRenderer } = require("electron");
+const { sortBy } = require("../utils/sort");
 
 export default {
   name: "Browse",
@@ -249,17 +250,7 @@ export default {
       }
 
       // Sort list
-      this.filteredItems = newList.sort((a, b) => {
-        var valA = a[this.sort.key];
-        var valB = b[this.sort.key];
-        if (valA < valB) {
-          return this.sort.asc ? -1 : 1;
-        }
-        if (valA > valB) {
-          return this.sort.asc ? 1 : -1;
-        }
-        return 0;
-      });
+      this.filteredItems = sortBy(newList, this.sort.key, this.sort.asc);
     },
   },
 };
