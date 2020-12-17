@@ -4,9 +4,15 @@
     no-close-on-esc
     no-close-on-backdrop
     hide-header-close
-    @shown="completed = false"
+    @shown="onShown()"
   >
-    <template #modal-title>Working...</template>
+    <template #modal-title>{{ title }}</template>
+
+    <b-alert show variant="danger" v-if="completed && !success">
+      <h5 class="alert-heading">Error!</h5>
+      <p class="mb-0">{{ error }}</p>
+    </b-alert>
+
     <div class="d-block">
       <b-list-group>
         <b-list-group-item
@@ -43,12 +49,23 @@ export default {
   name: "SideloadModal",
   data: function () {
     return {
+      title: "Working...",
       completed: false,
+      hasReceivedUpdate: false,
       success: false,
+      error: null,
       items: [],
     };
   },
   methods: {
+    onShown() {
+      // If we fail on the first step, it is possible that @shown is called
+      // after we already set completed to true. So we have to check if we
+      // already got an event before setting it here
+      if (!this.hasReceivedUpdate) {
+        this.completed = false;
+      }
+    },
     getStatusClass(item) {
       if (!item.started) {
         return "default";
@@ -66,10 +83,20 @@ export default {
     },
   },
   created() {
+    this.hasReceivedUpdate = false;
     ipcRenderer.on("sideload_folder_progress", (e, args) => {
+      this.hasReceivedUpdate = true;
       this.items = args.items;
       if (args.done) {
         this.completed = true;
+        this.title = "Done";
+        this.success = args.success;
+        if (this.success) {
+          this.title = "Success";
+        } else {
+          this.title = "Error";
+          this.error = args.error;
+        }
       }
     });
   },
