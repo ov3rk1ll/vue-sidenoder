@@ -123,7 +123,6 @@ async function sideloadFolder(event, args) {
   globals.win.webContents.send("sideload_folder_progress", { items: tasks });
 
   // Check for connected device
-
   const deviceState = await globals.adb.getState(globals.device.id);
   logger.debug("deviceState:", deviceState);
   if (!deviceState) {
@@ -229,6 +228,32 @@ async function sideloadFolder(event, args) {
 
   // Read package info from filename or file content
   const packageName = args.app.packageName;
+  const reader = ApkReader.readFile(apkFile);
+  const manifest = reader.readManifestSync();
+  const filePackageName = manifest.package;
+
+  if (packageName != filePackageName) {
+    updateTask(
+      tasks,
+      "packageinfo",
+      true,
+      false,
+      false,
+      "Unexpected package name in file: " + filePackageName
+    );
+    globals.win.webContents.send("sideload_folder_progress", {
+      items: tasks,
+      done: true,
+      success: false,
+      error:
+        "Unexpected package name in file: " +
+        filePackageName +
+        " (should be " +
+        packageName +
+        ")",
+    });
+    return;
+  }
 
   updateTask(tasks, "packageinfo", true, false, true, undefined);
 
@@ -332,6 +357,7 @@ async function sideloadFolder(event, args) {
       .shell(globals.device.id, `rm -r "${deviceObbFolder}"`)
       .then(adbkit.util.readAll);
 
+    logger.debug("adb push", obbFolder, "to", deviceObbFolder);
     await adbPush(obbFolder, deviceObbFolder, (i, t, s, m) => {
       updateTask(tasks, "copy_obb", true, true, false, `[${i + 1}/${t}] ${m}`);
     });
