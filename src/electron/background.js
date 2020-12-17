@@ -15,6 +15,7 @@ const isDevelopment = process.env.NODE_ENV !== "production";
 unhandled();
 
 import globals from "./globals";
+globals.isDevelopment = isDevelopment;
 globals.adb = adbkit.createClient();
 
 import { bind as depsBind } from "./check-deps";

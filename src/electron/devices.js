@@ -1,6 +1,9 @@
+import path from "path";
 import adbkit from "@devicefarmer/adbkit";
 
 import globals from "./globals";
+
+const apptDst = "/data/local/tmp/aapt-arm-pie";
 
 export function bind(ipcMain) {
   ipcMain.on("check_device", checkDevice);
@@ -24,9 +27,32 @@ function checkDevice(event) {
   });
 }
 
-export async function getInstalledApps() {
+export async function getInstalledApps(withName = false) {
   if (!globals.device) {
     return {};
+  }
+
+  if (withName) {
+    // Push appt to device and set permissions
+    // see https://android.stackexchange.com/a/188229
+    const aaptSrc = globals.isDevelopment
+      ? path.resolve(`${__dirname}/../build/binaries/aapt-arm-pie`)
+      : path.resolve(`${process.resourcesPath}/../build/binaries/aapt-arm-pie`);
+
+    await globals.adb
+      .push(globals.device.id, aaptSrc, apptDst)
+      .then(function (transfer) {
+        return new Promise(function (resolve, reject) {
+          transfer.on("end", function () {
+            resolve();
+          });
+          transfer.on("error", reject);
+        });
+      });
+
+    await globals.adb
+      .shell(globals.device.id, `chmod 0755 ${apptDst}`)
+      .then(adbkit.util.readAll);
   }
 
   const apps = await globals.adb.getPackages(globals.device.id, "-3");
@@ -36,26 +62,37 @@ export async function getInstalledApps() {
   console.time("parse list");
   for (const app of apps) {
     appInfo[app] = {
+      label: null,
       packageName: app,
       versionCode: null,
+      versionName: null,
       debug: false,
       system: false,
     };
 
-    const info = await getAppInfo(app);
+    const info = await getAppInfo(app, withName);
     if (info != null) {
       appInfo[app] = info;
     }
   }
   console.timeEnd("parse list");
 
+  // Remove appt from device
+  if (withName) {
+    await globals.adb
+      .shell(globals.device.id, `rm ${apptDst}`)
+      .then(adbkit.util.readAll);
+  }
+
   return appInfo;
 }
 
-export async function getAppInfo(packageName) {
+export async function getAppInfo(packageName, withName) {
   const appInfo = {
+    label: null,
     packageName: packageName,
     versionCode: null,
+    versionName: null,
     debug: false,
     system: false,
   };
@@ -68,12 +105,29 @@ export async function getAppInfo(packageName) {
     appInfo.versionCode = parseInt(
       info.match(/versionCode=[0-9]*/)[0].slice(12)
     );
+
+    appInfo.versionName = info.match(/versionName=(.*)/)[0].slice(12);
+
     let pkgFlags = /.*pkgFlags=\[(.*)\]/m.exec(info);
     if (pkgFlags) {
       pkgFlags = pkgFlags[1].trim().split(" ");
 
       appInfo.debug = pkgFlags.includes("DEBUGGABLE");
       appInfo.system = pkgFlags.includes("SYSTEM");
+    }
+
+    if (withName) {
+      let path = /path: (\S*)/g.exec(info)[1];
+
+      const aapt = await globals.adb
+        .shell(globals.device.id, `${apptDst} d badging ${path}`)
+        .then(adbkit.util.readAll)
+        .then((output) => output.toString("utf-8"));
+
+      const matches = /application-label:'(.*)'/g.exec(aapt);
+      if (matches) {
+        appInfo.label = matches[1];
+      }
     }
   } catch (e) {
     console.error("Parse-Error:", e);

@@ -548,7 +548,7 @@ async function sideLoadLocalApk(event, args) {
   const reader = ApkReader.readFile(args.path);
   const manifest = reader.readManifestSync();
 
-  const installed = await getAppInfo(manifest.package);
+  const installed = await getAppInfo(manifest.package, false);
   logger.info("installed:", installed);
 
   // Build data for sideload_folder
@@ -574,7 +574,7 @@ async function sideLoadLocalFolder(event, args) {
   const reader = ApkReader.readFile(args.path);
   const manifest = reader.readManifestSync();
 
-  const installed = await getAppInfo(manifest.package);
+  const installed = await getAppInfo(manifest.package, false);
   logger.info("installed:", installed);
 
   // Build data for sideload_folder

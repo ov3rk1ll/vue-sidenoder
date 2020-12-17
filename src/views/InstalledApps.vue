@@ -9,6 +9,9 @@
         >
       </h1>
       <b-table striped hover :fields="fields" :items="items">
+        <template #cell(version)="data">
+          v{{ data.item.versionName }} ({{ data.item.versionCode }})
+        </template>
         <template #cell(flags)="data">
           {{ data.item.debug ? "DEBUG" : "" }}
           {{ data.item.system ? "SYSTEM" : "" }}
@@ -33,8 +36,9 @@ export default {
     return {
       loading: false,
       fields: [
-        "packageName",
-        "versionCode",
+        { key: "label", label: "Name" },
+        { key: "version", label: "Version" },
+        { key: "packageName", label: "Packagename" },
         { key: "flags", label: "Flags" },
         { key: "actions", label: "" },
       ],
@@ -68,8 +72,6 @@ export default {
           size: "lg",
           buttonSize: "lg",
           okVariant: "danger",
-          // headerClass: "p-2 border-bottom-0",
-          // footerClass: "p-2 border-top-0",
           centered: true,
         })
         .then((value) => {

@@ -19,6 +19,10 @@ module.exports = {
       mainProcessFile: "src/electron/background.js",
       nodeIntegration: true,
       mainProcessWatch: ["src/electron/*.js"],
+
+      builderOptions: {
+        extraFiles: ["build/binaries/*"],
+      },
     },
   },
 };

@@ -94,7 +94,7 @@ async function list(dir) {
   }
 
   let list = await rcloneList(dir);
-  const installedApps = dir === "" ? await getInstalledApps() : {};
+  const installedApps = dir === "" ? await getInstalledApps(false) : {};
 
   list = parseList(dir, list, installedApps);
   return list;
@@ -249,6 +249,6 @@ function cleanUpFoldername(simpleName) {
 async function getInstalledAppsFromDevice(event) {
   event.reply("get_installed_apps", {
     success: true,
-    value: await getInstalledApps(),
+    value: await getInstalledApps(true),
   });
 }
