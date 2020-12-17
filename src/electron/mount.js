@@ -4,6 +4,7 @@ import path from "path";
 import { tmpdir } from "os";
 import { exec } from "child_process";
 import settings from "electron-settings";
+import ogs from "open-graph-scraper";
 
 // import globals from "./globals";
 import { check, list as rcloneList } from "./rclone";
@@ -100,7 +101,7 @@ async function list(dir) {
   return list;
 }
 
-function parseList(folder, items, installedApps) {
+async function parseList(folder, items, installedApps) {
   const list = [];
   for (const item of items) {
     if (item.Name.startsWith(".") || !item.IsDir) {
@@ -135,12 +136,17 @@ function parseList(folder, items, installedApps) {
       entry.infoLink = "https://store.steampowered.com/app/" + steamid + "/";
     }
     if (new RegExp(".* -oculus-").test(item.Name)) {
-      // TODO: Better image for oculusid
       const oculusid = item.Name.match(/-oculus-([0-9]*)/)[1];
       entry.simpleName = entry.simpleName.split(" -oculus-")[0];
-      entry.imagePath = "https://vrdb.app/oculus/images/" + oculusid + ".jpg";
       entry.infoLink =
         "https://www.oculus.com/experiences/quest/" + oculusid + "/";
+
+      const image = await getOculusImage(oculusid);
+      if (image) {
+        entry.imagePath = image;
+      } else {
+        entry.imagePath = "https://vrdb.app/oculus/images/" + oculusid + ".jpg";
+      }
     }
     if (new RegExp(".* -versionCode-").test(item.Name)) {
       //oculusid = fileEnt.name.split('oculus-')[1]
@@ -187,6 +193,45 @@ function parseList(folder, items, installedApps) {
   }
 
   return list;
+}
+
+async function getOculusImage(oculusId) {
+  if (!settings.hasSync("imagecache.oculus-" + oculusId)) {
+    let attempt = true;
+    if (settings.hasSync("timeout.oculus-" + oculusId)) {
+      attempt = false;
+      // try again if 10 minutes have passed since the last timeout
+      if (
+        Date.now() - settings.getSync("timeout.oculus-" + oculusId) >
+        600000
+      ) {
+        attempt = true;
+      }
+    }
+    if (attempt) {
+      try {
+        const data = await ogs({
+          url: "https://www.oculus.com/experiences/quest/" + oculusId + "/",
+          timeout: 2000,
+          retry: 1,
+        });
+        if (data.error === false && data.result) {
+          settings.setSync(
+            "imagecache.oculus-" + oculusId,
+            data.result.ogImage.url
+          );
+        }
+      } catch (ex) {
+        settings.setSync("timeout.oculus-" + oculusId, Date.now());
+      }
+    }
+  }
+
+  if (settings.hasSync("imagecache.oculus-" + oculusId)) {
+    return settings.getSync("imagecache.oculus-" + oculusId);
+  } else {
+    return null;
+  }
 }
 
 async function listDir(event, args) {
