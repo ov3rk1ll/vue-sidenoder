@@ -481,7 +481,16 @@ export async function adbPush(src, dst, cb) {
       dstFile = dstFile.replace(/\\/g, "/");
     }
     cb(i, files.length, totalSize, `Sending ${relName}`);
-    await globals.adb.push(globals.device.id, file, dstFile);
+    await globals.adb
+      .push(globals.device.id, file, dstFile)
+      .then(function (transfer) {
+        return new Promise(function (resolve, reject) {
+          transfer.on("end", function () {
+            resolve();
+          });
+          transfer.on("error", reject);
+        });
+      });
     cb(i, files.length, totalSize, relName + " - Done");
   }
 }
