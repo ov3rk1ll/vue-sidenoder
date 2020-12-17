@@ -8,6 +8,28 @@
           >{{ items.length }} apps</small
         >
       </h1>
+      <div v-if="storage" class="mb-2">
+        <div class="d-flex">
+          <h5 class="py-2 pr-2">
+            <b-icon icon="hdd" /> {{ storage.free | formatBytes }} /
+            {{ storage.total | formatBytes }} free
+          </h5>
+          <div class="flex-fill py-2">
+            <b-progress
+              :max="storage.total"
+              :value="storage.used"
+              variant="dark"
+              height="1.40625rem"
+            >
+              <b-progress-bar
+                :value="storage.used"
+                :label="`${storage.percentUsed} %`"
+              ></b-progress-bar>
+            </b-progress>
+          </div>
+        </div>
+      </div>
+
       <b-table striped hover :fields="fields" :items="items">
         <template #cell(version)="data">
           v{{ data.item.versionName }} ({{ data.item.versionCode }})
@@ -29,6 +51,7 @@
 
 <script>
 const { ipcRenderer } = require("electron");
+const { sortBy } = require("../utils/sort");
 
 export default {
   name: "InstalledApps",
@@ -43,6 +66,7 @@ export default {
         { key: "actions", label: "" },
       ],
       items: [],
+      storage: null,
     };
   },
   mounted: function () {
@@ -57,11 +81,19 @@ export default {
       });
 
       ipcRenderer.on("get_installed_apps", (e, args) => {
-        this.items = Object.values(args.value);
+        this.items = sortBy(Object.values(args.value), "label", true);
         this.loading = false;
       });
       this.loading = true;
       ipcRenderer.send("get_installed_apps", null);
+
+      ipcRenderer.on("get_storage_details", (e, args) => {
+        if (args.success) {
+          this.storage = args.value;
+        }
+      });
+      this.loading = true;
+      ipcRenderer.send("get_storage_details", null);
     });
   },
   methods: {

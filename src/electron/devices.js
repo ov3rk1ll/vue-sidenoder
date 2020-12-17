@@ -7,6 +7,7 @@ const apptDst = "/data/local/tmp/aapt-arm-pie";
 
 export function bind(ipcMain) {
   ipcMain.on("check_device", checkDevice);
+  ipcMain.on("get_storage_details", getStorageDetails);
 }
 
 function checkDevice(event) {
@@ -145,6 +146,32 @@ export async function getDeviceFiles(serial, dir) {
     })
   );
   return Array.prototype.concat(...files);
+}
+
+async function getStorageDetails(event) {
+  let df = await globals.adb
+    .shell(globals.device.id, `df /sdcard/`)
+    .then(adbkit.util.readAll)
+    .then((output) => output.toString("utf-8"));
+
+  df = df
+    .split("\n")[1] // Take 2nd line
+    .split(" ") // Split columns
+    .filter((x) => !!x); // Remove empty fields
+
+  const used = parseInt(df[2]) * 1024;
+  const free = parseInt(df[3]) * 1024;
+  const total = used + free;
+
+  event.reply("get_storage_details", {
+    success: true,
+    value: {
+      total,
+      used,
+      free,
+      percentUsed: Math.ceil((used / total) * 100),
+    },
+  });
 }
 
 // Also trackDevices

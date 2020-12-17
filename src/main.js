@@ -7,6 +7,8 @@ import App from "./App.vue";
 import "./style/main.scss";
 import router from "./router";
 
+import { formatBytes } from "./utils/formatter";
+
 Vue.config.productionTip = false;
 
 Vue.use(BootstrapVue);
@@ -43,6 +45,9 @@ requireComponent.keys().forEach((fileName) => {
     componentConfig.default || componentConfig
   );
 });
+
+// Register filters
+Vue.filter("formatBytes", formatBytes);
 
 new Vue({
   router,
