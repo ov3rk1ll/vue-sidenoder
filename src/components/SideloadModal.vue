@@ -41,7 +41,7 @@ const { ipcRenderer } = require("electron");
 
 export default {
   name: "SideloadModal",
-  data: function() {
+  data: function () {
     return {
       completed: false,
       success: false,

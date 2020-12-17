@@ -109,7 +109,7 @@ const { ipcRenderer } = require("electron");
 
 export default {
   name: "Browse",
-  data: function() {
+  data: function () {
     return {
       items: [],
       filteredItems: [],
@@ -133,7 +133,7 @@ export default {
       error: null,
     };
   },
-  beforeMount: function() {
+  beforeMount: function () {
     // Apply from setting
     const sortSettingJson = localStorage.getItem("browse-sort");
     if (sortSettingJson) {
@@ -158,8 +158,8 @@ export default {
       this.filter = this.filterDefault;
     }
   },
-  mounted: function() {
-    this.$nextTick(function() {
+  mounted: function () {
+    this.$nextTick(function () {
       ipcRenderer.on("ls_dir", (e, args) => {
         if (args.success) {
           this.error = null;
@@ -197,11 +197,11 @@ export default {
     });
   },
   watch: {
-    filter: function() {
+    filter: function () {
       localStorage.setItem("browse-filter", JSON.stringify(this.filter));
       this.updateList();
     },
-    sort: function() {
+    sort: function () {
       localStorage.setItem("browse-sort", JSON.stringify(this.sort));
       this.updateList();
     },
@@ -271,8 +271,5 @@ export default {
 }
 .custom-control-label {
   white-space: nowrap;
-}
-input.form-control {
-  margin-bottom: -1px !important;
 }
 </style>

@@ -25,7 +25,7 @@
           v-on:click="open(item)"
           v-if="
             item.installedVersion != -1 &&
-              item.installedVersion < item.versionCode
+            item.installedVersion < item.versionCode
           "
           :disabled="loading"
         >
@@ -93,7 +93,7 @@ export default {
     };
   },
   methods: {
-    open: function(item) {
+    open: function (item) {
       ipcRenderer.once("check_folder", (e, args) => {
         this.loading = false;
 
@@ -131,7 +131,7 @@ export default {
       this.loading = true;
       ipcRenderer.send("check_folder", { path: item.filePath });
     },
-    uninstall: function(item) {
+    uninstall: function (item) {
       this.$bvModal
         .msgBoxConfirm("Uninstall " + item.simpleName + "?", {
           title: "Uninstall " + item.simpleName + "?",

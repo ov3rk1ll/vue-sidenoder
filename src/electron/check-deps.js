@@ -35,10 +35,7 @@ async function checkDepsRclone(event) {
 
   if (exists) {
     let output = await execShellCommand(`${rclonePath} --version`);
-    version = output
-      .split("\n")[0]
-      .trim()
-      .split(" ")[1];
+    version = output.split("\n")[0].trim().split(" ")[1];
   }
 
   event.reply("check_deps_rclone", {

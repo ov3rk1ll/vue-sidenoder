@@ -37,7 +37,7 @@ const { ipcRenderer } = require("electron");
 
 export default {
   name: "Loading",
-  data: function() {
+  data: function () {
     return {
       completed: false,
       success: false,
@@ -64,8 +64,8 @@ export default {
       ],
     };
   },
-  mounted: function() {
-    this.$nextTick(function() {
+  mounted: function () {
+    this.$nextTick(function () {
       this.runCheck();
     });
   },

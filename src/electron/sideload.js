@@ -494,9 +494,9 @@ export async function adbPull(src, dst) {
     const dstFile = path.join(dst, relName);
     // Create folder as needed
     await mkdirsSync(path.dirname(dstFile));
-    await globals.adb.pull(globals.device.id, file).then(function(transfer) {
-      return new Promise(function(resolve, reject) {
-        transfer.on("end", function() {
+    await globals.adb.pull(globals.device.id, file).then(function (transfer) {
+      return new Promise(function (resolve, reject) {
+        transfer.on("end", function () {
           resolve(dstFile);
         });
         transfer.on("error", reject);

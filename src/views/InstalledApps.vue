@@ -29,7 +29,7 @@ const { ipcRenderer } = require("electron");
 
 export default {
   name: "InstalledApps",
-  data: function() {
+  data: function () {
     return {
       loading: false,
       fields: [
@@ -41,8 +41,8 @@ export default {
       items: [],
     };
   },
-  mounted: function() {
-    this.$nextTick(function() {
+  mounted: function () {
+    this.$nextTick(function () {
       ipcRenderer.on("sideload_folder_progress", (e, args) => {
         // Update list if sideload is args.done: true
         if (args.done && args.task === "uninstall") {
@@ -61,7 +61,7 @@ export default {
     });
   },
   methods: {
-    uninstall: function(item) {
+    uninstall: function (item) {
       this.$bvModal
         .msgBoxConfirm("Uninstall " + item.packageName + "?", {
           title: "Uninstall " + item.packageName + "?",

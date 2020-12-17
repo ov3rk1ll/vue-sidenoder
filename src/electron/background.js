@@ -47,7 +47,7 @@ async function createWindow() {
     icon: path.join(__static, "icon.png"),
   });
 
-  globals.win.webContents.on("new-window", function(event, url) {
+  globals.win.webContents.on("new-window", function (event, url) {
     event.preventDefault();
     open(url);
   });

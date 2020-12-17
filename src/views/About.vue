@@ -41,8 +41,8 @@ export default {
       settings: {},
     };
   },
-  mounted: function() {
-    this.$nextTick(function() {
+  mounted: function () {
+    this.$nextTick(function () {
       ipcRenderer.on("get_all_setting", (e, args) => {
         this.settings = args.value;
       });

@@ -25,7 +25,7 @@ export default {
       required: true,
     },
   },
-  data: function() {
+  data: function () {
     return {
       text: "",
       status: "default",
@@ -33,8 +33,8 @@ export default {
       ipcRenderer,
     };
   },
-  mounted: function() {
-    this.$nextTick(function() {
+  mounted: function () {
+    this.$nextTick(function () {
       ipcRenderer.on(this.event, (e, args) => {
         this.loading = false;
         this.text = args.value;
@@ -45,7 +45,7 @@ export default {
     });
   },
   methods: {
-    checkStatus: function() {
+    checkStatus: function () {
       this.status = "info";
       this.text = "Checking...";
       this.loading = true;
