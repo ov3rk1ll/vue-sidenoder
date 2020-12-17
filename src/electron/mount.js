@@ -241,6 +241,7 @@ function cleanUpFoldername(simpleName) {
   //simpleName = simpleName.split(/v[0-9][0-9][0-9]\./)[0]
   simpleName = simpleName.split(/\[[0-9]*\./)[0];
   simpleName = simpleName.split(/\[[0-9]*\]/)[0];
+  simpleName = simpleName.trim();
 
   return simpleName;
 }
