@@ -185,6 +185,7 @@ export default {
                 console.log(item.packageName, "was installed");
                 item.installedVersion = item.versionCode;
               });
+            this.updateList();
           } else if (args.task == "uninstall") {
             this.items
               .filter((x) => x.packageName == args.packageName)
@@ -192,8 +193,19 @@ export default {
                 console.log(item.packageName, "was uninstalled");
                 item.installedVersion = -1;
               });
+            this.updateList();
           }
         }
+      });
+
+      ipcRenderer.on("browse_better_image_ready", (e, args) => {
+        console.log("browse_better_image_ready", args.infoLink);
+        this.items
+          .filter((x) => x.infoLink == args.infoLink)
+          .forEach((item) => {
+            item.imagePath = args.imageUrl;
+          });
+        this.updateList();
       });
     });
   },

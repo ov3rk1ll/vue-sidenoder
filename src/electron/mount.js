@@ -5,10 +5,12 @@ import { tmpdir } from "os";
 import { exec } from "child_process";
 import settings from "electron-settings";
 import ogs from "open-graph-scraper";
+import ElectronStore from "electron-store";
 
 // import globals from "./globals";
 import { check, list as rcloneList } from "./rclone";
 import { getInstalledApps } from "./devices";
+import globals from "./globals";
 
 export function bind(ipcMain) {
   ipcMain.on("check_mount", checkMount);
@@ -196,40 +198,44 @@ async function parseList(folder, items, installedApps) {
 }
 
 async function getOculusImage(oculusId) {
-  if (!settings.hasSync("imagecache.oculus-" + oculusId)) {
-    let attempt = true;
-    if (settings.hasSync("timeout.oculus-" + oculusId)) {
-      attempt = false;
-      // try again if 10 minutes have passed since the last timeout
-      if (
-        Date.now() - settings.getSync("timeout.oculus-" + oculusId) >
-        600000
-      ) {
-        attempt = true;
-      }
-    }
-    if (attempt) {
-      try {
-        const data = await ogs({
-          url: "https://www.oculus.com/experiences/quest/" + oculusId + "/",
-          timeout: 2000,
-          retry: 1,
-        });
-        if (data.error === false && data.result) {
-          settings.setSync(
-            "imagecache.oculus-" + oculusId,
-            data.result.ogImage.url
-          );
-        }
-      } catch (ex) {
-        settings.setSync("timeout.oculus-" + oculusId, Date.now());
-      }
+  const store = new ElectronStore({ name: "oculus-image-cache" });
+
+  // Check cache entry age
+  if (store.has("image." + oculusId)) {
+    const age = Date.now() - store.get("image." + oculusId + ".created");
+    // Invalidate if entry is older than 7 days
+    if (age > 604800000) {
+      store.delete("image." + oculusId);
     }
   }
 
-  if (settings.hasSync("imagecache.oculus-" + oculusId)) {
-    return settings.getSync("imagecache.oculus-" + oculusId);
+  if (store.has("image." + oculusId)) {
+    return store.get("image." + oculusId + ".url");
   } else {
+    // Start fetch and store result. Nofify list to update image
+    const pageUrl =
+      "https://www.oculus.com/experiences/quest/" + oculusId + "/";
+    ogs(
+      {
+        url: pageUrl,
+        timeout: 5000,
+      },
+      (error, result) => {
+        if (!error) {
+          store.set("image." + oculusId, {
+            url: result.ogImage.url,
+            created: Date.now(),
+          });
+
+          // Notify frontend list
+          globals.win.webContents.send("browse_better_image_ready", {
+            infoLink: pageUrl,
+            imageUrl: result.ogImage.url,
+          });
+        }
+      }
+    );
+
     return null;
   }
 }
