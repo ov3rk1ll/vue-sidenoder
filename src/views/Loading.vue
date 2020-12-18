@@ -24,9 +24,15 @@
 
     <input
       type="file"
+      ref="adb"
+      style="display: none"
+      @change="onAdbSelected($event)"
+    />
+
+    <input
+      type="file"
       ref="rclone"
       style="display: none"
-      accept=".exe"
       @change="onRcloneSelected($event)"
     />
   </div>
@@ -53,6 +59,13 @@ export default {
           text: "Finding work dir",
           loading: true,
           status: true,
+        },
+        {
+          key: "adb",
+          text: "Checking ADB",
+          loading: true,
+          status: false,
+          click: "adb",
         },
         {
           key: "rclone",
@@ -102,6 +115,17 @@ export default {
           this.$router.push({ path: "browse" });
         }, 1000);
       }
+    },
+    onAdbSelected($event) {
+      const path = $event.target.files[0].path;
+
+      ipcRenderer.once("put_setting", () => {
+        this.runCheck();
+      });
+      ipcRenderer.send("put_setting", {
+        key: "adb.executable",
+        value: path,
+      });
     },
     onRcloneSelected($event) {
       const path = $event.target.files[0].path;

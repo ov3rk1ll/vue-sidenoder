@@ -8,6 +8,9 @@ const defaultSettings = {
     root: "",
     executable: "rclone",
   },
+  adb: {
+    executable: "adb",
+  },
 };
 
 export function bind(ipcMain) {

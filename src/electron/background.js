@@ -16,7 +16,13 @@ unhandled();
 
 import globals from "./globals";
 globals.isDevelopment = isDevelopment;
-globals.adb = adbkit.createClient();
+
+let adbPath = "adb";
+if (settings.hasSync("adb.executable")) {
+  adbPath = settings.getSync("adb.executable");
+}
+
+globals.adb = adbkit.createClient({ bin: adbPath });
 
 import { bind as depsBind } from "./check-deps";
 import { bind as deviceBind } from "./devices";
