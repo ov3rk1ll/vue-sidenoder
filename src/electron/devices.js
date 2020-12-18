@@ -2,27 +2,71 @@ import path from "path";
 import adbkit from "@devicefarmer/adbkit";
 
 import globals from "./globals";
+import { reply } from "../utils/ipc";
 
 const apptDst = "/data/local/tmp/aapt-arm-pie";
+
+const supportedDevices = undefined; // ["Quest", "Quest 2"]; // TODO: Name for quest 2
 
 export function bind(ipcMain) {
   ipcMain.on("check_device", checkDevice);
   ipcMain.on("get_storage_details", getStorageDetails);
+
+  globals.adb
+    .trackDevices()
+    .then(function (tracker) {
+      tracker.on("change", () => {
+        checkDevice();
+      });
+      tracker.on("remove", () => {
+        checkDevice();
+      });
+      tracker.on("end", () => {
+        console.log("Tracking stopped");
+      });
+    })
+    .catch((err) => {
+      console.error("Something went wrong:", err.stack);
+    });
+}
+
+async function filter(arr, callback) {
+  const fail = Symbol();
+  return (
+    await Promise.all(
+      arr.map(async (item) => ((await callback(item)) ? item : fail))
+    )
+  ).filter((i) => i !== fail);
 }
 
 function checkDevice(event) {
-  globals.adb.listDevices().then((devices) => {
-    if (devices == null || devices.length == 0) {
-      event.reply("check_device", {
+  globals.adb.listDevices().then(async (devices) => {
+    if (devices == null) {
+      devices = [];
+    }
+
+    devices = await filter(devices, async (x) => {
+      if (x.type !== "device") {
+        return false;
+      }
+      const properties = await globals.adb.getProperties(x.id);
+      const name = properties["ro.product.model"];
+      x.name = name;
+      return supportedDevices ? supportedDevices.includes(name) : true;
+    });
+
+    if (devices.length === 0) {
+      globals.device = null;
+      reply(event, "check_device", {
         success: false,
         value: "No device found!",
       });
     } else {
       globals.device = devices[0];
-      event.reply("check_device", {
+      reply(event, "check_device", {
         success: true,
-        value: "Connected",
-        device: devices[0].id,
+        value: devices[0].name,
+        device: devices[0],
       });
     }
   });
@@ -173,30 +217,3 @@ async function getStorageDetails(event) {
     },
   });
 }
-
-// Also trackDevices
-/*globals.adb
-  .trackDevices()
-  .then(function(tracker) {
-    tracker.on("add", (device) => {
-      globals.win.webContents.send("check_device", {
-        success: true,
-        value: device.id,
-      });
-      console.log("Device %s was plugged in", device.id);
-    });
-    tracker.on("remove", (device) => {
-      // TODO: Check if this is the only device
-      globals.win.webContents.send("check_device", {
-        success: false,
-        value: "No device found!",
-      });
-      console.log("Device %s was unplugged", device.id);
-    });
-    tracker.on("end", () => {
-      console.log("Tracking stopped");
-    });
-  })
-  .catch((err) => {
-    console.error("Something went wrong:", err.stack);
-  });*/

@@ -20,7 +20,7 @@
         <!-- Right aligned nav items -->
         <b-navbar-nav class="ml-auto">
           <NavbarStatus title="Drive status" event="check_mount" />
-          <NavbarStatus title="Quest status" event="check_device" />
+          <NavbarStatus title="Device status" event="check_device" />
         </b-navbar-nav>
       </b-collapse>
     </b-navbar>
