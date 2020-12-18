@@ -10,16 +10,15 @@
       </h1>
       <div v-if="storage" class="mb-2">
         <div class="d-flex">
-          <h5 class="py-2 pr-2">
-            <b-icon icon="hdd" /> {{ storage.free | formatBytes }} /
-            {{ storage.total | formatBytes }} free
-          </h5>
+          <h6 class="py-2 pr-2">
+            <b-icon icon="hdd" />
+          </h6>
           <div class="flex-fill py-2">
             <b-progress
               :max="storage.total"
               :value="storage.used"
               variant="dark"
-              height="1.40625rem"
+              height="1.125rem"
             >
               <b-progress-bar
                 :value="storage.used"
@@ -27,6 +26,10 @@
               ></b-progress-bar>
             </b-progress>
           </div>
+          <h6 class="py-2 pl-2">
+            {{ storage.free | formatBytes }} /
+            {{ storage.total | formatBytes }} free
+          </h6>
         </div>
       </div>
 
