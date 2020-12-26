@@ -3,4 +3,5 @@ export default {
   adb: null,
   device: null,
   isDevelopment: false,
+  rclone: null,
 };

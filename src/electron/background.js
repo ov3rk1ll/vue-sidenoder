@@ -24,11 +24,14 @@ if (settings.hasSync("adb.executable")) {
 
 globals.adb = adbkit.createClient({ bin: adbPath });
 
+globals.rclone = new RcloneRc();
+
 import { bind as depsBind } from "./check-deps";
 import { bind as deviceBind } from "./devices";
 import { bind as mountBind, stopMount } from "./mount";
 import { bind as sideloadBind } from "./sideload";
 import { bind as settingsBind } from "./settings";
+import { RcloneRc } from "./rclone";
 
 depsBind(ipcMain);
 deviceBind(ipcMain);

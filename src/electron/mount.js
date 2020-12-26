@@ -2,13 +2,9 @@ import settings from "electron-settings";
 import ogs from "open-graph-scraper";
 import ElectronStore from "electron-store";
 
-// import globals from "./globals";
-import { RcloneRc } from "./rclone";
 import { getInstalledApps } from "./devices";
 import globals from "./globals";
 import { sortBy } from "../utils/sort";
-
-const rclone = new RcloneRc();
 
 export function bind(ipcMain) {
   ipcMain.on("check_mount", checkMount);
@@ -18,7 +14,7 @@ export function bind(ipcMain) {
 }
 
 async function checkMount(event) {
-  if (await rclone.check()) {
+  if (await globals.rclone.check()) {
     event.reply("check_mount", {
       success: true,
       value: "Connected",
@@ -30,7 +26,7 @@ async function checkMount(event) {
 
 async function connectMount(event) {
   try {
-    rclone.connect();
+    globals.rclone.connect();
     event.reply("check_mount", {
       success: true,
       value: "Connected",
@@ -41,7 +37,7 @@ async function connectMount(event) {
 }
 
 export async function stopMount() {
-  await rclone.stopMount();
+  await globals.rclone.stopMount();
 }
 
 async function list(dir) {
@@ -53,7 +49,7 @@ async function list(dir) {
     }
   }
 
-  let list = await rclone.list(dir);
+  let list = await globals.rclone.list(dir);
   const installedApps = dir === "" ? await getInstalledApps(false) : {};
 
   // Sort by date so get newest first
@@ -234,7 +230,7 @@ async function listDir(event, args) {
 }
 
 async function checkFolder(event, args) {
-  const files = await rclone.list(args.path, { recurse: true });
+  const files = await globals.rclone.list(args.path, { recurse: true });
 
   let totalSize = 0;
   for (const file of files) {

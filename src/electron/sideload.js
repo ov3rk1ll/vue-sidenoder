@@ -14,10 +14,6 @@ import {
 import { Logger } from "../utils/logger";
 import { getAppInfo, getDeviceFiles } from "./devices";
 import { platform } from "os";
-import { RcloneRc } from "./rclone";
-
-// FIXME: Global instance
-const rclone = new RcloneRc();
 
 export function bind(ipcMain) {
   ipcMain.on("sideload_folder", sideloadFolder);
@@ -180,29 +176,33 @@ async function sideloadFolder(event, args) {
 
     logger.debug("copy", args.data.path, "to", tempFolder);
 
-    const jobId = await rclone.copy(args.data.path, tempFolder, (data) => {
-      if (data.percentage) {
-        updateTask(
-          tasks,
-          "download",
-          true,
-          true,
-          false,
-          "Downloading files - " +
-            data.percentage +
-            "% (" +
-            formatBytes(data.bytes) +
-            " / " +
-            formatBytes(data.size) +
-            ")" +
-            " - " +
-            formatBytes(data.speedAvg) +
-            "/s" +
-            " - " +
-            formatEta(data.eta)
-        );
+    const jobId = await globals.rclone.copy(
+      args.data.path,
+      tempFolder,
+      (data) => {
+        if (data.percentage) {
+          updateTask(
+            tasks,
+            "download",
+            true,
+            true,
+            false,
+            "Downloading files - " +
+              data.percentage +
+              "% (" +
+              formatBytes(data.bytes) +
+              " / " +
+              formatBytes(data.size) +
+              ")" +
+              " - " +
+              formatBytes(data.speedAvg) +
+              "/s" +
+              " - " +
+              formatEta(data.eta)
+          );
+        }
       }
-    });
+    );
     logger.debug("Job", jobId, "has finished");
 
     const apkFileExists = existsSync(apkFile);
