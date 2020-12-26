@@ -25,6 +25,7 @@
   "main": "background.js",
   "dependencies": {
     "@devicefarmer/adbkit": "^2.11.3",
+    "atob": "^2.1.2",
     "bootstrap": "^4.5.3",
     "bootstrap-vue": "^2.21.1",
     "bootswatch": "^4.5.3",

@@ -4,8 +4,13 @@ import path from "path";
 import { tmpdir } from "os";
 import { writeFileSync } from "fs";
 import { exec } from "child_process";
+import atob from "atob";
 
 export class RcloneRc {
+  constructor(port = 5572) {
+    this.url = `http://127.0.0.1:${port}`;
+  }
+
   async connect() {
     try {
       let cpath = null;
@@ -15,7 +20,9 @@ export class RcloneRc {
 
       if (cpath == "" || cpath == null) {
         let key = await fetch(
-          "https://raw.githubusercontent.com/whitewhidow/quest-sideloader-linux/main/extras/k"
+          atob(
+            "aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL3doaXRld2hpZG93L3F1ZXN0LXNpZGVsb2FkZXItbGludXgvbWFpbi9leHRyYXMvaw=="
+          )
         )
           .then((resp) => resp.text())
           .then((content) => Buffer.from(content, "base64").toString("ascii"));
@@ -24,7 +31,9 @@ export class RcloneRc {
         writeFileSync(kpath, key);
 
         let config = await fetch(
-          "https://raw.githubusercontent.com/whitewhidow/quest-sideloader-linux/main/extras/c"
+          atob(
+            "aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL3doaXRld2hpZG93L3F1ZXN0LXNpZGVsb2FkZXItbGludXgvbWFpbi9leHRyYXMvYw=="
+          )
         )
           .then((resp) => resp.text())
           .then((content) => Buffer.from(content, "base64").toString("ascii"));
@@ -49,7 +58,7 @@ export class RcloneRc {
 
   async check() {
     try {
-      const resp = await fetch("http://127.0.0.1:5572/rc/noop", {
+      const resp = await fetch(`${this.url}/rc/noop`, {
         method: "post",
       });
       return resp.ok;
@@ -80,7 +89,7 @@ export class RcloneRc {
       remote: path,
       opt: opt,
     };
-    const list = await fetch("http://127.0.0.1:5572/operations/list", {
+    const list = await fetch(`${this.url}/operations/list`, {
       method: "post",
       body: JSON.stringify(body),
       headers: { "Content-Type": "application/json" },
@@ -91,27 +100,6 @@ export class RcloneRc {
     return list;
   }
 
-  /*async copyfile(src, dst) {
-    const body = {
-      srcFs: settings.getSync("rclone.mirror") + ":",
-      srcRemote: src,
-      dstFs: "/",
-      dstRemote: dst,
-      _async: true,
-    };
-
-    const resp = await fetch("http://127.0.0.1:5572/operations/copyfile", {
-      method: "post",
-      body: JSON.stringify(body),
-      headers: { "Content-Type": "application/json" },
-    })
-      .then((resp) => resp.json())
-      .then((resp) => {
-        return resp.jobid;
-      });
-    return resp;
-  }*/
-
   async copy(src, dst, cb) {
     const body = {
       srcFs: settings.getSync("rclone.mirror") + ":" + src,
@@ -119,7 +107,7 @@ export class RcloneRc {
       _async: true,
     };
 
-    const resp = await fetch("http://127.0.0.1:5572/sync/copy", {
+    const resp = await fetch(`${this.url}/sync/copy`, {
       method: "post",
       body: JSON.stringify(body),
       headers: { "Content-Type": "application/json" },
@@ -141,7 +129,7 @@ export class RcloneRc {
 
   async waitForJob(jobid, cb, seen = false) {
     return new Promise((resolve) => {
-      fetch("http://127.0.0.1:5572/core/stats?group=job/" + jobid, {
+      fetch(`${this.url}/core/stats?group=job${jobid}`, {
         method: "post",
       })
         .then((resp) => resp.json())
@@ -168,7 +156,7 @@ export class RcloneRc {
       return true;
     } else {
       console.log("sending quit to rclone");
-      await fetch("http://127.0.0.1:5572/core/quit", {
+      await fetch(`${this.url}/core/quit`, {
         method: "post",
       });
       return true;
