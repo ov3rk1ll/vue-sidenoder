@@ -1,8 +1,12 @@
 import path from "path";
 import adbkit from "@devicefarmer/adbkit";
+import mime from "mime-types";
+import { createWriteStream } from "fs";
+import { dialog } from "electron";
 
 import globals from "./globals";
 import { reply } from "../utils/ipc";
+import { sortBy } from "../utils/sort";
 
 const apptDst = "/data/local/tmp/aapt-arm-pie";
 
@@ -11,6 +15,8 @@ const supportedDevices = undefined; // ["Quest", "Quest 2"]; // TODO: Name for q
 export function bind(ipcMain) {
   ipcMain.on("check_device", checkDevice);
   ipcMain.on("get_storage_details", getStorageDetails);
+  ipcMain.on("adb_dir", getDeviceDir);
+  ipcMain.on("adb_pull", pullFile);
 
   globals.adb
     .trackDevices()
@@ -190,6 +196,80 @@ export async function getDeviceFiles(serial, dir) {
     })
   );
   return Array.prototype.concat(...files);
+}
+
+async function getDeviceDir(event, args) {
+  console.log("readdir", args.path);
+  const dirents = await globals.adb
+    .readdir(globals.device.id, args.path)
+    .then((files) => {
+      files.forEach((file) => {
+        file.isDir = file.isDirectory();
+        file.path = path.join(args.path, file.name).replace(/\\/g, "/");
+        file.mime = mime.lookup(file.name);
+      });
+      return files;
+    })
+    .then((entries) => {
+      // List folders first and files last
+      const folders = entries.filter((x) => x.isDir);
+      const files = entries.filter((x) => !x.isDir);
+      return sortBy(folders, "name", true, true).concat(
+        sortBy(files, "name", true, true)
+      );
+    })
+    .then((files) => {
+      if (args.path === "/sdcard") {
+        return files;
+      }
+      return [
+        /*{
+          name: ".",
+          path: "/sdcard",
+          isDir: true,
+        },*/
+        {
+          name: "..",
+          path: path.join(args.path, "..").replace(/\\/g, "/"),
+          isDir: true,
+        },
+      ].concat(files);
+    });
+  reply(event, "adb_dir", {
+    success: false,
+    value: dirents,
+  });
+}
+
+async function pullFile(event, args) {
+  const result = dialog.showSaveDialogSync(globals.win, {
+    title: "The title",
+    defaultPath: args.name,
+  });
+  if (result) {
+    await globals.adb
+      .pull(globals.device.id, args.path)
+      .then(function (transfer) {
+        return new Promise(function (resolve, reject) {
+          transfer.on("end", function () {
+            resolve(result);
+          });
+          transfer.on("error", reject);
+          transfer.pipe(createWriteStream(result));
+        });
+      });
+
+    event.reply("adb_pull", {
+      success: true,
+      canceled: false,
+      dst: result,
+    });
+  } else {
+    event.reply("adb_pull", {
+      success: true,
+      canceled: true,
+    });
+  }
 }
 
 async function getStorageDetails(event) {

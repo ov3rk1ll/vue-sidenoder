@@ -84,7 +84,7 @@ export default {
       });
 
       ipcRenderer.on("get_installed_apps", (e, args) => {
-        this.items = sortBy(Object.values(args.value), "label", true);
+        this.items = sortBy(Object.values(args.value), "label", true, true);
         this.loading = false;
       });
       this.loading = true;

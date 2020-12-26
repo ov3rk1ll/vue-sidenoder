@@ -4,6 +4,7 @@ import Loading from "@/views/Loading.vue";
 import Browse from "@/views/Browse.vue";
 import InstalledApps from "@/views/InstalledApps.vue";
 import Sideload from "@/views/Sideload.vue";
+import Storage from "@/views/Storage.vue";
 import About from "@/views/About.vue";
 
 Vue.use(VueRouter);
@@ -36,6 +37,13 @@ export const routes = [
     component: Sideload,
     showInNav: true,
     icon: "file-arrow-down",
+  },
+  {
+    path: "/storage",
+    name: "Storage",
+    component: Storage,
+    showInNav: true,
+    icon: "files",
   },
   {
     path: "/about",
