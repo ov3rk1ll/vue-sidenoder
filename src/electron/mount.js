@@ -151,7 +151,25 @@ async function parseList(folder, items, installedApps) {
       entry.installedVersion = installedApps[entry.packageName].versionCode;
     }
 
-    list.push(entry);
+    // Check if we already have this package name in the list and if the current entry has a higher versionCode
+    const samePackage = list.filter((x) => x.packageName === entry.packageName);
+    if (samePackage.length > 0) {
+      if (entry.versionCode > samePackage[0].versionCode) {
+        // Remove all entries with the packagename
+        list.forEach((x, i) => {
+          if (x.packageName === entry.packageName) {
+            list.splice(i, 1);
+            return false;
+          }
+        });
+
+        // Add entry with newer versionCode
+        list.push(entry);
+      }
+    } else {
+      // Add if there is no entry with the package name
+      list.push(entry);
+    }
   }
 
   return list;
