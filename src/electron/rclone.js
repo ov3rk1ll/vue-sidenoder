@@ -58,6 +58,21 @@ export class RcloneRc {
     }
   }
 
+  /**
+   * @typedef ListEntry
+   * @property {string} Name Name of the entry
+   * @property {string} Path Full path to the entry
+   * @property {bool} IsDir True for directory, false for file
+   * @property {string} MimeType MimeType for entry
+   * @property {string} ModTime Last modified date
+   */
+
+  /**
+   *
+   * @param {string} path
+   * @param {any} opt
+   * @returns {Promise<ListEntry>} A promise for the list at the given path
+   */
   async list(path, opt = null) {
     if (opt == null) opt = {};
     const body = {
