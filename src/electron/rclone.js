@@ -129,7 +129,7 @@ export class RcloneRc {
 
   async waitForJob(jobid, cb, seen = false) {
     return new Promise((resolve) => {
-      fetch(`${this.url}/core/stats?group=job${jobid}`, {
+      fetch(`${this.url}/core/stats?group=job/${jobid}`, {
         method: "post",
       })
         .then((resp) => resp.json())
