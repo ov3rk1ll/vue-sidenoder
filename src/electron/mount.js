@@ -1,16 +1,14 @@
-import { writeFileSync } from "fs";
-import fetch from "node-fetch";
-import path from "path";
-import { tmpdir } from "os";
-import { exec } from "child_process";
 import settings from "electron-settings";
 import ogs from "open-graph-scraper";
 import ElectronStore from "electron-store";
 
 // import globals from "./globals";
-import { check, list as rcloneList } from "./rclone";
+import { RcloneRc } from "./rclone";
 import { getInstalledApps } from "./devices";
 import globals from "./globals";
+import { sortBy } from "../utils/sort";
+
+const rclone = new RcloneRc();
 
 export function bind(ipcMain) {
   ipcMain.on("check_mount", checkMount);
@@ -20,7 +18,7 @@ export function bind(ipcMain) {
 }
 
 async function checkMount(event) {
-  if (await check()) {
+  if (await rclone.check()) {
     event.reply("check_mount", {
       success: true,
       value: "Connected",
@@ -32,40 +30,7 @@ async function checkMount(event) {
 
 async function connectMount(event) {
   try {
-    let cpath = null;
-    if (settings.hasSync("rclone.config")) {
-      cpath = settings.getSync("rclone.config");
-    }
-
-    if (cpath == "" || cpath == null) {
-      let key = await fetch(
-        "https://raw.githubusercontent.com/whitewhidow/quest-sideloader-linux/main/extras/k"
-      )
-        .then((resp) => resp.text())
-        .then((content) => Buffer.from(content, "base64").toString("ascii"));
-
-      const kpath = path.join(tmpdir(), "k");
-      writeFileSync(kpath, key);
-
-      let config = await fetch(
-        "https://raw.githubusercontent.com/whitewhidow/quest-sideloader-linux/main/extras/c"
-      )
-        .then((resp) => resp.text())
-        .then((content) => Buffer.from(content, "base64").toString("ascii"));
-
-      config = config.replace("XXX", kpath);
-      cpath = path.join(tmpdir(), "c");
-      writeFileSync(cpath, config);
-    }
-
-    let rclonePath = "rclone";
-    if (settings.hasSync("rclone.executable")) {
-      rclonePath = settings.getSync("rclone.executable");
-    }
-    const cmd = `${rclonePath} rcd --rc-no-auth --config "${cpath}"`;
-    console.log("Start Rclone in RC mode:", cmd);
-    exec(cmd);
-
+    rclone.connect();
     event.reply("check_mount", {
       success: true,
       value: "Connected",
@@ -76,15 +41,7 @@ async function connectMount(event) {
 }
 
 export async function stopMount() {
-  if (!(await check())) {
-    return true;
-  } else {
-    console.log("sending quit to rclone");
-    await fetch("http://127.0.0.1:5572/core/quit", {
-      method: "post",
-    });
-    return true;
-  }
+  await rclone.stopMount();
 }
 
 async function list(dir) {
@@ -96,8 +53,11 @@ async function list(dir) {
     }
   }
 
-  let list = await rcloneList(dir);
+  let list = await rclone.list(dir);
   const installedApps = dir === "" ? await getInstalledApps(false) : {};
+
+  // Sort by date so get newest first
+  list = sortBy(list, "ModTime", false);
 
   list = parseList(dir, list, installedApps);
   return list;
@@ -256,7 +216,7 @@ async function listDir(event, args) {
 }
 
 async function checkFolder(event, args) {
-  const files = await rcloneList(args.path, { recurse: true });
+  const files = await rclone.list(args.path, { recurse: true });
 
   let totalSize = 0;
   for (const file of files) {

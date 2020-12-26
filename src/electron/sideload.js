@@ -4,7 +4,6 @@ import path from "path";
 import ApkReader from "node-apk-parser";
 
 import globals from "./globals";
-import { copy, waitForJob } from "./rclone";
 import { formatEta, formatBytes } from "../utils/formatter";
 import {
   mkdirsSync,
@@ -15,6 +14,10 @@ import {
 import { Logger } from "../utils/logger";
 import { getAppInfo, getDeviceFiles } from "./devices";
 import { platform } from "os";
+import { RcloneRc } from "./rclone";
+
+// FIXME: Global instance
+const rclone = new RcloneRc();
 
 export function bind(ipcMain) {
   ipcMain.on("sideload_folder", sideloadFolder);
@@ -177,9 +180,7 @@ async function sideloadFolder(event, args) {
 
     logger.debug("copy", args.data.path, "to", tempFolder);
 
-    const jobId = await copy(args.data.path, tempFolder);
-
-    await waitForJob(jobId, (data) => {
+    const jobId = await rclone.copy(args.data.path, tempFolder, (data) => {
       if (data.percentage) {
         updateTask(
           tasks,
