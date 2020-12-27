@@ -1,18 +1,34 @@
 <template>
   <div>
-    <Navbar />
-    <b-container fluid><router-view></router-view></b-container>
+    <div v-if="loading">
+      <b-container class="mt-4">
+        <Loading v-on:ready="onReady" />
+      </b-container>
+    </div>
+    <div v-if="!loading">
+      <Navbar />
+      <b-container fluid><router-view></router-view></b-container>
+    </div>
   </div>
 </template>
 
 <script>
 export default {
   name: "Layout",
-  props: {
-    msg: String,
+  data: function () {
+    return {
+      loading: true,
+    };
+  },
+  created() {
+    this.loading = true;
+  },
+  methods: {
+    onReady() {
+      this.loading = false;
+    },
   },
 };
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped></style>

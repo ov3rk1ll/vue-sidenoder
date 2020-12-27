@@ -9,6 +9,8 @@ import router from "./router";
 
 import { formatBytes } from "./utils/formatter";
 
+import Loading from "@/views/Loading.vue";
+
 Vue.config.productionTip = false;
 
 Vue.use(BootstrapVue);
@@ -45,6 +47,8 @@ requireComponent.keys().forEach((fileName) => {
     componentConfig.default || componentConfig
   );
 });
+
+Vue.component("Loading", Loading);
 
 // Register filters
 Vue.filter("formatBytes", formatBytes);
