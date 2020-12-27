@@ -26,7 +26,10 @@
       >
       to this app.
     </p>
-    <pre>{{ settings }}</pre>
+    <pre>
+From {{ settingsFile }}:
+{{ settings }}</pre
+    >
   </div>
 </template>
 
@@ -38,15 +41,20 @@ export default {
   data: () => {
     return {
       version: process.env.PACKAGE_VERSION,
+      settingsFile: null,
       settings: {},
     };
   },
   mounted: function () {
     this.$nextTick(function () {
+      ipcRenderer.on("get_setting_file", (e, args) => {
+        this.settingsFile = args.value;
+      });
+      ipcRenderer.send("get_setting_file", null);
+
       ipcRenderer.on("get_all_setting", (e, args) => {
         this.settings = args.value;
       });
-
       ipcRenderer.send("get_all_setting", null);
     });
   },

@@ -17,6 +17,7 @@ export function bind(ipcMain) {
   ipcMain.on("put_setting", putSetting);
   ipcMain.on("get_setting", getSetting);
   ipcMain.on("get_all_setting", getAllSetting);
+  ipcMain.on("get_setting_file", getSettingsFile);
 
   // Apply default settings
   const flat = flatten(defaultSettings);
@@ -49,5 +50,13 @@ async function getAllSetting(event) {
   event.reply("get_all_setting", {
     success: true,
     value: flatten(value),
+  });
+}
+
+async function getSettingsFile(event) {
+  const value = settings.file();
+  event.reply("get_setting_file", {
+    success: true,
+    value: value,
   });
 }
