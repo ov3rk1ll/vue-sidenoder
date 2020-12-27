@@ -10,9 +10,16 @@
         v-for="item in items"
         :key="item.key"
         :variant="item.loading ? 'default' : item.status ? 'success' : 'danger'"
+        class="d-flex"
       >
         <b-spinner small :class="{ invisible: !item.loading }"></b-spinner>
-        {{ item.text }}
+        <div class="flex-fill">
+          {{ item.text
+          }}<small
+            v-if="item.info && !item.loading && !item.status"
+            v-html="'<br />' + item.info"
+          ></small>
+        </div>
         <b-button
           size="sm"
           class="float-right"
@@ -50,6 +57,8 @@ export default {
         {
           key: "adb",
           text: "Checking ADB",
+          info:
+            'Download and unzip ADB from <a href="https://developer.android.com/studio/releases/platform-tools" target="_blank">here</a>. Add it to the path or select the location using the button on the right.',
           loading: true,
           status: false,
           click: {
@@ -61,6 +70,8 @@ export default {
         {
           key: "rclone",
           text: "Checking rclone",
+          info:
+            'Download and install Rclone from <a href="https://rclone.org/downloads/" target="_blank">here</a>. Add it to the path or select the location using the button on the right.',
           loading: true,
           status: false,
           click: {

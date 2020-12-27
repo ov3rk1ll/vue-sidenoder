@@ -52,7 +52,7 @@ async function checkDepsAdb(event) {
 
   event.reply("check_deps_adb", {
     status: exists,
-    value: exists ? "Adb detected - v" + version : "Adb not fould",
+    value: exists ? "Adb detected - v" + version : "Adb not found",
   });
 }
 
@@ -76,7 +76,7 @@ async function checkDepsRclone(event) {
 
   event.reply("check_deps_rclone", {
     status: exists,
-    value: exists ? "Rclone detected - " + version : "Rclone not fould",
+    value: exists ? "Rclone detected - " + version : "Rclone not found",
   });
 }
 
