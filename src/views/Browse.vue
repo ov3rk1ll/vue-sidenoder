@@ -178,7 +178,7 @@ export default {
 
       ipcRenderer.on("sideload_folder_progress", (e, args) => {
         if (args.done && args.success) {
-          if (args.task == "install") {
+          if (args.task === "install" || args.task === "update") {
             this.items
               .filter((x) => x.packageName == args.packageName)
               .forEach((item) => {
@@ -186,7 +186,7 @@ export default {
                 item.installedVersion = item.versionCode;
               });
             this.updateList();
-          } else if (args.task == "uninstall") {
+          } else if (args.task === "uninstall") {
             this.items
               .filter((x) => x.packageName == args.packageName)
               .forEach((item) => {
