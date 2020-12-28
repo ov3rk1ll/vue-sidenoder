@@ -18,9 +18,10 @@
     "postinstall": "patch-package && husky install && electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps",
     "electron:generate-icons": "electron-icon-builder --input=./public/icon.png --output=build --flatten",
-    "fmt": "prettier --write src/**/*.* !src/assets/* && npm run lintfix",
+    "fmt": "prettier --write 'src/**/*.*' '!src/assets/*' && npm run lintfix",
+    "fmt_test": "prettier --check 'src/**/*.*' '!src/assets/*'",
     "lintfix": "vue-cli-service lint --fix",
-    "test": "npm run fmt && npm run lint"
+    "test": "npm run fmt_test && npm run lint"
   },
   "main": "background.js",
   "dependencies": {
@@ -52,7 +53,7 @@
     "electron-icon-builder": "^2.0.1",
     "electron-unhandled": "^3.0.2",
     "eslint": "^6.8.0",
-    "eslint-plugin-vue": "^7.3.0",
+    "eslint-plugin-vue": "^7.4.0",
     "husky": "^5.0.6",
     "node-sass": "^5.0.0",
     "patch-package": "^6.2.2",
