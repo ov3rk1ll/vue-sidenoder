@@ -261,7 +261,7 @@ async function checkFolder(event, args) {
 
 function cleanUpFoldername(simpleName) {
   simpleName = simpleName.split("-QuestUnderground")[0];
-  simpleName = simpleName.split(/v[0-9]*\./)[0];
+  simpleName = simpleName.split(/v[0-9+.]*\./)[0];
   //simpleName = simpleName.split(/v[0-9][0-9]\./)[0]
   //simpleName = simpleName.split(/v[0-9][0-9][0-9]\./)[0]
   simpleName = simpleName.split(/\[[0-9]*\./)[0];
