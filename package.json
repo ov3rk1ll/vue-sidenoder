@@ -9,12 +9,9 @@
   },
   "homepage": "https://ov3rk1ll.dev",
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
+    "serve": "vue-cli-service electron:serve",
+    "build": "vue-cli-service electron:build",
     "lint": "vue-cli-service lint",
-    "electron:build": "vue-cli-service electron:build",
-    "electron:build:all": "npm run electron:build -- --linux deb --win nsis",
-    "electron:serve": "vue-cli-service electron:serve",
     "postinstall": "patch-package && husky install && electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps",
     "electron:generate-icons": "electron-icon-builder --input=./public/icon.png --output=build --flatten",
@@ -24,6 +21,10 @@
     "test": "npm run fmt_test && npm run lint"
   },
   "main": "background.js",
+  "engines": {
+    "node": ">=0.15",
+    "npm": "^7.0.0"
+  },
   "dependencies": {
     "@devicefarmer/adbkit": "^2.11.3",
     "atob": "^2.1.2",
