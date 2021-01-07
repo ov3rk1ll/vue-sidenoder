@@ -1,7 +1,7 @@
 "use strict";
 /* global __static */
 
-import { app, protocol, BrowserWindow, Menu, ipcMain } from "electron";
+import { app, protocol, BrowserWindow, Menu, ipcMain, dialog } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import path from "path";
@@ -24,14 +24,13 @@ if (settings.hasSync("adb.executable")) {
 
 globals.adb = adbkit.createClient({ bin: adbPath });
 
-globals.rclone = new RcloneRc();
-
 import { bind as depsBind } from "./check-deps";
 import { bind as deviceBind } from "./devices";
 import { bind as mountBind, stopMount } from "./mount";
 import { bind as sideloadBind } from "./sideload";
 import { bind as settingsBind } from "./settings";
-import { RcloneRc } from "./rclone";
+import { RcloneRc } from "./sources/rclone";
+import { LocalFs } from "./sources/local";
 
 depsBind(ipcMain);
 deviceBind(ipcMain);
@@ -39,12 +38,32 @@ mountBind(ipcMain);
 sideloadBind(ipcMain);
 settingsBind(ipcMain);
 
+console.log(settings.getSync("rclone"));
+
+if (settings.getSync("mount") === "rclone") {
+  globals.rclone = new RcloneRc(settings.getSync("rclone.mirror"));
+} else if (settings.getSync("mount") === "fs") {
+  globals.rclone = new LocalFs(settings.getSync("fs.root"));
+} else {
+  globals.rclone = null;
+}
+
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true } },
 ]);
 
 async function createWindow() {
+  if (!globals.rclone) {
+    dialog.showMessageBoxSync(null, {
+      title: "Error!",
+      message: 'Unsupported mount type "' + settings.getSync("mount") + '"!',
+      type: "error",
+    });
+    app.quit();
+    return;
+  }
+
   // Create the browser window.
   globals.win = new BrowserWindow({
     width: 1200,

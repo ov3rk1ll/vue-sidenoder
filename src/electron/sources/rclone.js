@@ -7,7 +7,8 @@ import { exec } from "child_process";
 import atob from "atob";
 
 export class RcloneRc {
-  constructor(port = 5572) {
+  constructor(mirror, port = 5572) {
+    this.mirror = mirror;
     this.url = `http://127.0.0.1:${port}`;
   }
 
@@ -85,7 +86,7 @@ export class RcloneRc {
   async list(path, opt = null) {
     if (opt == null) opt = {};
     const body = {
-      fs: settings.getSync("rclone.mirror") + ":",
+      fs: this.mirror + ":",
       remote: path,
       opt: opt,
     };
@@ -102,7 +103,7 @@ export class RcloneRc {
 
   async copy(src, dst, cb) {
     const body = {
-      srcFs: settings.getSync("rclone.mirror") + ":" + src,
+      srcFs: this.mirror + ":" + src,
       dstFs: dst,
       _async: true,
     };

@@ -2,6 +2,7 @@ import settings from "electron-settings";
 import flatten from "flat";
 
 const defaultSettings = {
+  mount: "rclone",
   rclone: {
     config: "",
     mirror: "WHITEWHIDOW_QUEST",
