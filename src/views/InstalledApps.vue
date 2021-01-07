@@ -1,13 +1,12 @@
 <template>
   <div>
     <CenterSpinner v-if="loading" />
+    <h1>
+      <b-icon icon="cpu" /> Installed apps
+      <small class="text-muted" v-if="!loading">{{ items.length }} apps</small>
+      <small class="text-muted" v-if="loading">Loading...</small>
+    </h1>
     <div class="installed" v-if="!loading">
-      <h1>
-        <b-icon icon="cpu" /> Installed apps
-        <small class="text-muted" v-if="!loading"
-          >{{ items.length }} apps</small
-        >
-      </h1>
       <div v-if="storage" class="mb-2">
         <div class="d-flex">
           <h6 class="py-2 pr-2">
@@ -36,6 +35,15 @@
       <b-table striped hover :fields="fields" :items="items">
         <template #cell(version)="data">
           v{{ data.item.versionName }} ({{ data.item.versionCode }})
+        </template>
+        <template #cell(packageName)="data">
+          <router-link
+            :to="{
+              path: '/',
+              query: { q: data.item.packageName },
+            }"
+            >{{ data.item.packageName }}</router-link
+          >
         </template>
         <template #cell(flags)="data">
           {{ data.item.debug ? "DEBUG" : "" }}

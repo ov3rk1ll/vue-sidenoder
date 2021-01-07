@@ -1,22 +1,23 @@
 <template>
   <div>
     <CenterSpinner v-if="loading" />
-    <div class="browse" v-if="!loading">
-      <div class="d-flex">
-        <div class="flex-fill">
-          <h1>
-            <b-icon icon="journal-text" /> Browse
-            <small class="text-muted" v-if="!loading"
-              >{{ filteredItems.length }} games</small
-            >
-          </h1>
-        </div>
-        <div>
-          <b-button variant="outline-light" @click="reload()"
-            ><b-icon icon="arrow-repeat" /> Refresh</b-button
+    <div class="d-flex">
+      <div class="flex-fill">
+        <h1>
+          <b-icon icon="journal-text" /> Browse
+          <small class="text-muted" v-if="!loading"
+            >{{ filteredItems.length }} games</small
           >
-        </div>
+          <small class="text-muted" v-if="loading">Loading...</small>
+        </h1>
       </div>
+      <div v-if="!loading">
+        <b-button variant="outline-light" @click="reload()"
+          ><b-icon icon="arrow-repeat" /> Refresh</b-button
+        >
+      </div>
+    </div>
+    <div class="browse" v-if="!loading">
       <b-input-group class="mt-2 mb-4">
         <b-input-group-prepend>
           <b-input-group-text class="border-0">
@@ -135,6 +136,9 @@ export default {
     };
   },
   beforeMount: function () {
+    if (this.$route.query.q) {
+      this.query = this.$route.query.q;
+    }
     // Apply from setting
     const sortSettingJson = localStorage.getItem("browse-sort");
     if (sortSettingJson) {
@@ -248,21 +252,40 @@ export default {
           candiate = item;
         }
 
-        if (
-          candiate &&
-          this.query != "" &&
-          !candiate.simpleName.toLowerCase().includes(this.query.toLowerCase())
-        ) {
-          candiate = null;
+        if (!candiate) {
+          continue;
         }
 
-        if (candiate != null) {
+        candiate = this.checkQuery(candiate, this.query);
+
+        if (candiate) {
           newList.push(candiate);
         }
       }
 
       // Sort list
       this.filteredItems = sortBy(newList, this.sort.key, this.sort.asc);
+    },
+    checkQuery(item, query) {
+      if (query === "" || query === null) {
+        return item;
+      }
+
+      const _q = this.query.toLowerCase();
+
+      if (_q === item.packageName.toLowerCase()) {
+        return item;
+      }
+
+      if (_q === "mp" && item.mp) {
+        return item;
+      }
+
+      if (item.simpleName.toLowerCase().includes(_q)) {
+        return item;
+      }
+
+      return null;
     },
   },
 };
