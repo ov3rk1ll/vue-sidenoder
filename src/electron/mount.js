@@ -142,6 +142,11 @@ async function parseList(folder, items, installedApps) {
       entry.imagePath = `https://dummyimage.com/460x215/000/fff.jpg&text=${entry.simpleName}`;
     }
 
+    if (!entry.packageName) {
+      console.warn("packageName for", entry.name, "was null!");
+      continue;
+    }
+
     // Check if installed
     if (installedApps[entry.packageName]) {
       entry.installedVersion = installedApps[entry.packageName].versionCode;
