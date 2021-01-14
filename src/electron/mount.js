@@ -66,7 +66,7 @@ async function parseList(folder, items, installedApps) {
       continue;
     }
 
-    const entry = {
+    let entry = {
       name: item.Name,
       simpleName: item.Name,
       IsDir: item.IsDir,
@@ -124,27 +124,34 @@ async function parseList(folder, items, installedApps) {
       entry.na = true;
     }
 
-    const versionName = entry.simpleName.match(/v(\d\S*)/);
-    if (versionName == null) {
-      const versionNameAlt = entry.simpleName.match(/\[(\d\S*)\]/);
-      if (versionNameAlt == null) {
-        console.log("parse versionName failed for", entry.simpleName);
+    if (!entry.packageName) {
+      const inside = await globals.rclone.find(item.Name);
+      if (inside) {
+        entry = inside;
       } else {
-        entry.versionName = "v" + versionNameAlt[1];
+        console.warn("packageName for", entry.name, "was null!");
+        continue;
       }
-    } else {
-      entry.versionName = "v" + versionName[1];
+    }
+
+    if (!entry.versionName) {
+      const versionName = entry.simpleName.match(/v(\d\S*)/);
+      if (versionName == null) {
+        const versionNameAlt = entry.simpleName.match(/\[(\d\S*)\]/);
+        if (versionNameAlt == null) {
+          console.log("parse versionName failed for", entry.simpleName);
+        } else {
+          entry.versionName = "v" + versionNameAlt[1];
+        }
+      } else {
+        entry.versionName = "v" + versionName[1];
+      }
     }
 
     entry.simpleName = cleanUpFoldername(entry.simpleName);
 
     if (!entry.imagePath) {
       entry.imagePath = `https://dummyimage.com/460x215/000/fff.jpg&text=${entry.simpleName}`;
-    }
-
-    if (!entry.packageName) {
-      console.warn("packageName for", entry.name, "was null!");
-      continue;
     }
 
     // Check if installed

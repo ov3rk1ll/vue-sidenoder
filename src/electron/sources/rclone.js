@@ -101,6 +101,11 @@ export class RcloneRc {
     return list;
   }
 
+  // eslint-disable-next-line no-unused-vars
+  async find(folder) {
+    return null;
+  }
+
   async copy(src, dst, cb) {
     const body = {
       srcFs: this.mirror + ":" + src,
