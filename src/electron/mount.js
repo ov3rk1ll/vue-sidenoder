@@ -263,7 +263,8 @@ async function checkFolder(event, args) {
     });
     return;
   }
-  const hasFolders = files.filter((x) => x.IsDir).length > 0;
+  const hasFolders =
+    files.filter((x) => x.IsDir && x.Name === args.item.packageName).length > 0;
 
   event.reply("check_folder", {
     success: true,

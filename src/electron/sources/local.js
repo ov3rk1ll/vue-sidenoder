@@ -2,6 +2,7 @@ import path from "path";
 import { promises as fs } from "fs";
 import mime from "mime-types";
 import ApkReader from "node-apk-parser";
+import { copyFolderRecursiveSync } from "../../utils/fs";
 
 // import { Logger } from "../../utils/logger";
 // const logger = new Logger("FS");
@@ -47,7 +48,7 @@ export class LocalFs {
         const stat = await fs.stat(p);
         const t = {
           Name: dirent.name,
-          Path: p,
+          Path: path.join(folder, dirent.name),
           IsDir: dirent.isDirectory(),
           MimeType: dirent.isDirectory()
             ? "inode/directory"
@@ -65,6 +66,20 @@ export class LocalFs {
           : t;
       })
     );
+
+    if (opt._depth > 0) {
+      const stat = await fs.stat(dir);
+
+      files.push({
+        Name: path.basename(folder),
+        Path: folder,
+        IsDir: true,
+        MimeType: "inode/directory",
+        ModTime: stat.mtime,
+        Size: 0,
+      });
+    }
+
     return Array.prototype.concat(...files);
   }
 
@@ -75,7 +90,7 @@ export class LocalFs {
     );
 
     if (apkFile) {
-      const reader = ApkReader.readFile(apkFile.Path);
+      const reader = ApkReader.readFile(path.join(this.root, apkFile.Path));
       const manifest = reader.readManifestSync();
       return {
         name: manifest.application.label,
@@ -100,7 +115,8 @@ export class LocalFs {
 
   // eslint-disable-next-line no-unused-vars
   async copy(src, dst, cb) {
-    // TODO: Don't copy?
+    const srcDir = path.join(this.root, src);
+    copyFolderRecursiveSync(srcDir, path.resolve(dst, "../"));
   }
 
   async stopMount() {

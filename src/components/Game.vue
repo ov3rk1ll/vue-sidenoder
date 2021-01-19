@@ -132,7 +132,7 @@ export default {
         }
       });
       this.loading = true;
-      ipcRenderer.send("check_folder", { path: item.filePath });
+      ipcRenderer.send("check_folder", { path: item.filePath, item: item });
     },
     uninstall: function (item) {
       this.$bvModal
