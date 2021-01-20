@@ -28,7 +28,7 @@
   "dependencies": {
     "@devicefarmer/adbkit": "^2.11.3",
     "atob": "^2.1.2",
-    "bootstrap": "^4.5.3",
+    "bootstrap": "^4.6.0",
     "bootstrap-vue": "^2.21.2",
     "bootswatch": "^4.5.3",
     "command-exists": "^1.2.9",
