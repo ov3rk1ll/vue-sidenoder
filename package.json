@@ -30,7 +30,7 @@
     "atob": "^2.1.2",
     "bootstrap": "^4.5.3",
     "bootstrap-vue": "^2.21.2",
-    "bootswatch": "^4.5.3",
+    "bootswatch": "^4.6.0",
     "command-exists": "^1.2.9",
     "core-js": "^3.8.2",
     "electron-settings": "^4.0.2",
