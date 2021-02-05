@@ -2,7 +2,7 @@
 
 ![Platforms](https://img.shields.io/static/v1?label=platform&message=win%20%7C%20mac%20%7C%20linux&color=blue&style=for-the-badge)
 [![GitHub release](https://img.shields.io/github/v/release/ov3rk1ll/vue-sidenoder?style=for-the-badge&sort=semver&label=release)](https://github.com/ov3rk1ll/vue-sidenoder/releases/latest)
-[![GitHub build](https://img.shields.io/github/workflow/status/ov3rk1ll/vue-sidenoder/build-release?style=for-the-badge)](https://github.com/ov3rk1ll/vue-sidenoder/actions?query=workflow%3Abuild-release)
+[![GitHub build](https://img.shields.io/github/workflow/status/ov3rk1ll/vue-sidenoder/build-release/main?style=for-the-badge)](https://github.com/ov3rk1ll/vue-sidenoder/actions?query=workflow%3Abuild-release)
 
 _Based on [quest-sidenoder](https://github.com/whitewhidow/quest-sidenoder)_
 
