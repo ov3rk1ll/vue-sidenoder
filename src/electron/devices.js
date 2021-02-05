@@ -7,6 +7,7 @@ import { dialog } from "electron";
 import globals from "./globals";
 import { reply } from "../utils/ipc";
 import { sortBy } from "../utils/sort";
+import { mkdirsSync, workdir } from "../utils/fs";
 
 const apptDst = "/data/local/tmp/aapt-arm-pie";
 
@@ -242,27 +243,36 @@ async function getDeviceDir(event, args) {
 }
 
 async function pullFile(event, args) {
-  const result = dialog.showSaveDialogSync(globals.win, {
-    title: "The title",
-    defaultPath: args.name,
-  });
-  if (result) {
+  let dst = null;
+  if (args.temp) {
+    const tempFolder = path.join(workdir(), "temp-pull");
+    mkdirsSync(tempFolder);
+    dst = path.join(tempFolder, getRandomFileName() + path.extname(args.name));
+  } else {
+    dst = dialog.showSaveDialogSync(globals.win, {
+      title: "Save " + args.name,
+      defaultPath: args.name,
+    });
+  }
+  if (dst) {
     await globals.adb
       .pull(globals.device.id, args.path)
       .then(function (transfer) {
         return new Promise(function (resolve, reject) {
           transfer.on("end", function () {
-            resolve(result);
+            resolve(dst);
           });
           transfer.on("error", reject);
-          transfer.pipe(createWriteStream(result));
+          transfer.pipe(createWriteStream(dst));
         });
       });
 
     event.reply("adb_pull", {
       success: true,
       canceled: false,
-      dst: result,
+      dst: dst,
+      temp: args.temp,
+      name: args.name,
     });
   } else {
     event.reply("adb_pull", {
@@ -270,6 +280,13 @@ async function pullFile(event, args) {
       canceled: true,
     });
   }
+}
+
+function getRandomFileName() {
+  var timestamp = new Date().toISOString().replace(/[-:.]/g, "");
+  var random = ("" + Math.random()).substring(2, 8);
+  var random_number = timestamp + random;
+  return random_number;
 }
 
 async function getStorageDetails(event) {

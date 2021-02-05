@@ -31,6 +31,18 @@
         <div>...</div>
       </b-list-group-item>
     </b-list-group>
+
+    <b-modal id="bv-modal-file-preview" size="xl">
+      <template #modal-title>{{ previewFile.name }} </template>
+      <div class="d-block text-center">
+        <img :src="'temp://' + previewFile.preview" style="max-width: 100%" />
+      </div>
+      <template #modal-footer>
+        <b-button class="mt-3" @click="open(previewFile, true)"
+          >Save</b-button
+        ></template
+      >
+    </b-modal>
   </div>
 </template>
 
@@ -44,6 +56,7 @@ export default {
       folder: null,
       items: [],
       loading: false,
+      previewFile: { name: null, preview: null },
       quicklinks: [
         {
           name: "Home",
@@ -69,10 +82,15 @@ export default {
 
       ipcRenderer.on("adb_pull", (e, args) => {
         if (!args.canceled) {
-          this.$toast.success("File was copied!", {
-            pauseOnFocusLoss: false,
-            pauseOnHover: true,
-          });
+          if (args.temp) {
+            this.previewFile.preview = args.dst;
+            this.$bvModal.show("bv-modal-file-preview");
+          } else {
+            this.$toast.success("File was copied!", {
+              pauseOnFocusLoss: false,
+              pauseOnHover: true,
+            });
+          }
         }
         this.loading = false;
       });
@@ -81,16 +99,28 @@ export default {
     });
   },
   methods: {
-    open(item) {
+    open(item, noPreview = false) {
       this.loading = true;
       if (item.isDir) {
         this.folder = item.path;
         ipcRenderer.send("adb_dir", { path: item.path });
       } else {
-        ipcRenderer.send("adb_pull", {
-          path: item.path,
-          name: item.name,
-        });
+        delete item.temp;
+        this.$bvModal.hide("bv-modal-file-preview");
+        if (item.mime.startsWith("image/") && !noPreview) {
+          // preview image in dialog
+          this.previewFile = Object.assign({}, item, { preview: null });
+          ipcRenderer.send("adb_pull", {
+            path: item.path,
+            name: item.name,
+            temp: true,
+          });
+        } else {
+          ipcRenderer.send("adb_pull", {
+            path: item.path,
+            name: item.name,
+          });
+        }
       }
     },
     getIcon(item) {
