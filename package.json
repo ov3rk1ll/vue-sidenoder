@@ -41,7 +41,7 @@
     "open": "^7.3.1",
     "open-graph-scraper": "^4.7.1",
     "vue": "^2.6.12",
-    "vue-router": "^3.4.9"
+    "vue-router": "^3.5.1"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.11",
