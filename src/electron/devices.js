@@ -19,6 +19,7 @@ export function bind(ipcMain) {
   ipcMain.on("adb_dir", getDeviceDir);
   ipcMain.on("adb_pull", pullFile);
   ipcMain.on("adb_push", pushFile);
+  ipcMain.on("adb_remove", removeFile);
 
   globals.adb
     .trackDevices()
@@ -310,6 +311,33 @@ async function pushFile(event, args) {
   } else {
     event.reply("adb_push", {
       success: true,
+      canceled: true,
+    });
+  }
+}
+
+async function removeFile(event, args) {
+  const result = dialog.showMessageBoxSync(globals.win, {
+    type: "question",
+    buttons: ["OK", "Cancel"],
+    title: "Delete file",
+    message:
+      'Are you sure you want to delete "' + args.file + '" from the device?',
+  });
+
+  if (result == 0) {
+    await globals.adb
+      // Need to surround path with " for spaces and some other characters to work
+      .shell(globals.device.id, `rm "${args.file}"`)
+      .then(adbkit.util.readAll);
+
+    event.reply("adb_remove", {
+      success: true,
+      canceled: false,
+      file: args.file,
+    });
+  } else {
+    event.reply("adb_remove", {
       canceled: true,
     });
   }

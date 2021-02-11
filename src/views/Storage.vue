@@ -39,6 +39,20 @@
           {{ item.name }}
         </div>
         <div>{{ getExtraInfo(item) }}</div>
+        <div>
+          <b-button
+            size="sm"
+            variant="secondary"
+            class="ml-3 p-1 my-0"
+            v-if="!item.isDir"
+          >
+            <b-icon
+              icon="trash"
+              aria-label="Help"
+              @click="remove(item, $event)"
+            ></b-icon>
+          </b-button>
+        </div>
       </b-list-group-item>
     </b-list-group>
 
@@ -117,6 +131,18 @@ export default {
         this.loading = false;
       });
 
+      ipcRenderer.on("adb_remove", (e, args) => {
+        if (!args.canceled) {
+          this.$toast.success("File was removed!", {
+            pauseOnFocusLoss: false,
+            pauseOnHover: true,
+          });
+
+          ipcRenderer.send("adb_dir", { path: this.folder });
+        }
+        this.loading = false;
+      });
+
       this.open({ path: "/sdcard", isDir: true });
     });
   },
@@ -148,6 +174,13 @@ export default {
     upload() {
       ipcRenderer.send("adb_push", { folder: this.folder });
       this.loading = true;
+    },
+    remove(item, event) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      ipcRenderer.send("adb_remove", { file: item.path });
     },
     getIcon(item) {
       if (item.name === "..") {
