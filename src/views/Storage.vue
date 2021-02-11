@@ -13,7 +13,17 @@
         :disabled="loading"
         >{{ item.name }}</b-button
       >
+
+      <b-button
+        size="sm"
+        squared
+        variant="primary"
+        class="float-right"
+        @click="upload()"
+        >Upload file to current folder</b-button
+      >
     </div>
+
     <h4>{{ folder }}</h4>
     <b-list-group>
       <b-list-group-item
@@ -28,7 +38,7 @@
           <b-icon :icon="getIcon(item)" class="mr-2" />
           {{ item.name }}
         </div>
-        <div>...</div>
+        <div>{{ getExtraInfo(item) }}</div>
       </b-list-group-item>
     </b-list-group>
 
@@ -47,6 +57,7 @@
 </template>
 
 <script>
+import { formatBytes } from "../utils/formatter";
 const { ipcRenderer } = require("electron");
 
 export default {
@@ -95,6 +106,17 @@ export default {
         this.loading = false;
       });
 
+      ipcRenderer.on("adb_push", (e, args) => {
+        if (!args.canceled) {
+          this.$toast.success("File was copied to device!", {
+            pauseOnFocusLoss: false,
+            pauseOnHover: true,
+          });
+          ipcRenderer.send("adb_dir", { path: this.folder });
+        }
+        this.loading = false;
+      });
+
       this.open({ path: "/sdcard", isDir: true });
     });
   },
@@ -123,6 +145,10 @@ export default {
         }
       }
     },
+    upload() {
+      ipcRenderer.send("adb_push", { folder: this.folder });
+      this.loading = true;
+    },
     getIcon(item) {
       if (item.name === "..") {
         return "arrow-90deg-up";
@@ -149,6 +175,12 @@ export default {
       } else {
         return "file-x";
       }
+    },
+    getExtraInfo(item) {
+      if (item.isDir) {
+        return "";
+      }
+      return formatBytes(item.size) + " | " + item.mtime.toLocaleDateString();
     },
   },
 };

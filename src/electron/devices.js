@@ -18,6 +18,7 @@ export function bind(ipcMain) {
   ipcMain.on("get_storage_details", getStorageDetails);
   ipcMain.on("adb_dir", getDeviceDir);
   ipcMain.on("adb_pull", pullFile);
+  ipcMain.on("adb_push", pushFile);
 
   globals.adb
     .trackDevices()
@@ -200,7 +201,6 @@ export async function getDeviceFiles(serial, dir) {
 }
 
 async function getDeviceDir(event, args) {
-  console.log("readdir", args.path);
   const dirents = await globals.adb
     .readdir(globals.device.id, args.path)
     .then((files) => {
@@ -276,6 +276,39 @@ async function pullFile(event, args) {
     });
   } else {
     event.reply("adb_pull", {
+      success: true,
+      canceled: true,
+    });
+  }
+}
+
+async function pushFile(event, args) {
+  const src = dialog.showOpenDialogSync(globals.win, {
+    title: "Upload to " + args.folder,
+    roperties: ["openFile"],
+  });
+  if (src && src.length === 1) {
+    const dst = args.folder + "/" + path.basename(src[0]);
+
+    await globals.adb
+      .push(globals.device.id, src[0], dst)
+      .then(function (transfer) {
+        return new Promise(function (resolve, reject) {
+          transfer.on("end", function () {
+            resolve();
+          });
+          transfer.on("error", reject);
+        });
+      });
+
+    event.reply("adb_push", {
+      success: true,
+      canceled: false,
+      dst: dst,
+      name: path.basename(src[0]),
+    });
+  } else {
+    event.reply("adb_push", {
       success: true,
       canceled: true,
     });
