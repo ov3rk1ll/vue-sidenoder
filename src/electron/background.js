@@ -97,6 +97,11 @@ app.on("activate", () => {
 app.on("ready", async () => {
   console.log("Reading settings from", settings.file());
 
+  protocol.registerFileProtocol("temp", (request, callback) => {
+    var url = request.url.substr(7);
+    callback({ path: url });
+  });
+
   if (isDevelopment && !process.env.IS_TEST) {
     // Install Vue Devtools
     try {

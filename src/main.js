@@ -2,6 +2,7 @@ import Vue from "vue";
 import upperFirst from "lodash/upperFirst";
 import camelCase from "lodash/camelCase";
 import { BootstrapVue, BootstrapVueIcons } from "bootstrap-vue";
+import Toast from "vue-toastification";
 
 import App from "./App.vue";
 import "./style/main.scss";
@@ -15,6 +16,11 @@ Vue.config.productionTip = false;
 
 Vue.use(BootstrapVue);
 Vue.use(BootstrapVueIcons);
+Vue.use(Toast, {
+  transition: "Vue-Toastification__fade",
+  maxToasts: 20,
+  newestOnTop: true,
+});
 
 // globally register components
 const requireComponent = require.context(
