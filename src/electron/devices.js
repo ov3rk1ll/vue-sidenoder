@@ -156,6 +156,10 @@ export async function getAppInfo(packageName, withName) {
       .then(adbkit.util.readAll)
       .then((output) => output.toString("utf-8"));
 
+    if (info.includes(`Unable to find package: ${packageName}`)) {
+      return null;
+    }
+
     appInfo.versionCode = parseInt(
       info.match(/versionCode=[0-9]*/)[0].slice(12)
     );

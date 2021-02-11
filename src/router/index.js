@@ -1,6 +1,5 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
-import Loading from "@/views/Loading.vue";
 import Browse from "@/views/Browse.vue";
 import InstalledApps from "@/views/InstalledApps.vue";
 import Sideload from "@/views/Sideload.vue";
@@ -12,13 +11,6 @@ Vue.use(VueRouter);
 export const routes = [
   {
     path: "/",
-    name: "Loading",
-    component: Loading,
-    showInNav: false,
-    icon: null,
-  },
-  {
-    path: "/browse",
     name: "Browse",
     component: Browse,
     showInNav: true,

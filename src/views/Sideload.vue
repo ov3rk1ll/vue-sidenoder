@@ -4,14 +4,7 @@
     <p class="lead">Install any app you have on your system</p>
 
     <h2>Sideload APK file</h2>
-    <input
-      type="file"
-      ref="apkfile"
-      style="display: none"
-      accept=".apk"
-      @change="onApkSelected($event)"
-    />
-    <b-button variant="outline-primary" @click="$refs.apkfile.click()"
+    <b-button variant="outline-primary" @click="sideloadApk"
       >Select file</b-button
     >
     <p class="rounded border my-2 p-2 bg-light text-dark">
@@ -21,16 +14,7 @@
     </p>
 
     <h2>Sideload folder (APK + OBB files)</h2>
-    <input
-      type="file"
-      ref="folder"
-      style="display: none"
-      nwdirectory
-      webkitdirectory
-      directory
-      @change="onFolderSelected($event)"
-    />
-    <b-button variant="outline-primary" @click="$refs.folder.click()"
+    <b-button variant="outline-primary" @click="sideloadFolder"
       >Select folder</b-button
     >
     <p class="rounded border my-2 p-2 bg-light text-dark">
@@ -49,33 +33,31 @@ const { ipcRenderer } = require("electron");
 export default {
   name: "Sideload",
   methods: {
-    onApkSelected($event) {
-      const files = $event.target.files;
-      if (
-        files == null ||
-        files.length !== 1 ||
-        files[0].type !== "application/vnd.android.package-archive"
-      ) {
-        this.$bvModal.msgBoxOk("Please select a single APK file!", {
-          title: "Error",
-        });
-        return;
-      }
-
-      this.$bvModal.show("bv-modal-sideload");
-      ipcRenderer.send("sideload_local_apk", {
-        path: files[0].path,
+    sideloadApk() {
+      ipcRenderer.once("sideload_local_apk", (event, args) => {
+        if (args.success) {
+          this.$bvModal.show("bv-modal-sideload");
+        } else {
+          this.$bvModal.msgBoxOk(args.error, {
+            title: "Error",
+          });
+        }
       });
 
-      this.$refs.apkfile.value = "";
+      ipcRenderer.send("sideload_local_apk", null);
     },
-    onFolderSelected($event) {
-      this.$bvModal.show("bv-modal-sideload");
-      ipcRenderer.send("sideload_local_folder", {
-        path: $event.target.files[0].path,
+    sideloadFolder() {
+      ipcRenderer.once("sideload_local_folder", (event, args) => {
+        if (args.success) {
+          this.$bvModal.show("bv-modal-sideload");
+        } else {
+          this.$bvModal.msgBoxOk(args.error, {
+            title: "Error",
+          });
+        }
       });
 
-      this.$refs.folder.value = "";
+      ipcRenderer.send("sideload_local_folder", null);
     },
   },
 };

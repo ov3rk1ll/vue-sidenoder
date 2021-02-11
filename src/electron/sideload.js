@@ -1,7 +1,8 @@
-import { existsSync, statSync, createWriteStream } from "fs";
+import { existsSync, statSync, createWriteStream, readdirSync } from "fs";
 import adbkit from "@devicefarmer/adbkit";
 import path from "path";
 import ApkReader from "node-apk-parser";
+import { dialog } from "electron";
 
 import globals from "./globals";
 import { formatEta, formatBytes } from "../utils/formatter";
@@ -355,8 +356,15 @@ async function sideloadFolder(event, args) {
       .then(adbkit.util.readAll);
 
     logger.debug("adb push", obbFolder, "to", deviceObbFolder);
-    await adbPush(obbFolder, deviceObbFolder, (i, t, s, m) => {
-      updateTask(tasks, "copy_obb", true, true, false, `[${i + 1}/${t}] ${m}`);
+    await adbPush(obbFolder, deviceObbFolder, (i, t) => {
+      updateTask(
+        tasks,
+        "copy_obb",
+        true,
+        true,
+        false,
+        `[${i + 1}/${t}] Sending obb file(s)`
+      );
     });
 
     updateTask(tasks, "copy_obb", true, false, true, "OBB files copied");
@@ -538,20 +546,25 @@ export async function adbPull(src, dst) {
   }
 }
 
-async function sideLoadLocalApk(event, args) {
-  const logger = new Logger("Sideload APK");
-  logger.info("args:", args);
+async function sideLoadLocalApk(event) {
+  const file = dialog.showOpenDialogSync(globals.win, {
+    filters: [{ name: "Android App", extensions: ["apk"] }],
+    properties: ["openFile"],
+  });
 
-  const reader = ApkReader.readFile(args.path);
+  if (!file) {
+    return;
+  }
+
+  const reader = ApkReader.readFile(file[0]);
   const manifest = reader.readManifestSync();
 
   const installed = await getAppInfo(manifest.package, false);
-  logger.info("installed:", installed);
 
   // Build data for sideload_folder
   const sideloadArgs = {
     local: true,
-    path: args.path,
+    path: file[0],
     app: {
       packageName: manifest.package,
       installedVersion: installed == null ? -1 : installed.versionCode,
@@ -561,23 +574,62 @@ async function sideLoadLocalApk(event, args) {
     },
   };
 
-  sideloadFolder(sideloadArgs);
+  event.reply("sideload_local_apk", {
+    success: true,
+  });
+
+  sideloadFolder(null, sideloadArgs);
 }
 
-async function sideLoadLocalFolder(event, args) {
-  const logger = new Logger("Sideload Folder");
-  logger.info("args:", args);
+async function sideLoadLocalFolder(event) {
+  const folder = dialog.showOpenDialogSync(globals.win, {
+    properties: ["openDirectory"],
+  });
 
-  const reader = ApkReader.readFile(args.path);
+  if (!folder) {
+    return;
+  }
+
+  const files = readdirSync(folder[0], { withFileTypes: true });
+
+  const hasApk =
+    files.filter((x) => x.isFile() && x.name.endsWith(".apk")).length == 1;
+
+  if (!hasApk) {
+    event.reply("sideload_local_folder", {
+      success: false,
+      error: "Folder must contain exactly one APK file",
+    });
+    return;
+  }
+
+  const apkFile = path.join(
+    folder[0],
+    files.filter((x) => x.isFile() && x.name.endsWith(".apk"))[0].name
+  );
+
+  const reader = ApkReader.readFile(apkFile);
   const manifest = reader.readManifestSync();
 
+  const hasFolder =
+    files.filter((x) => x.isDirectory() && x.name === manifest.package).length >
+    0;
+
+  if (!hasFolder) {
+    event.reply("sideload_local_folder", {
+      success: false,
+      error:
+        'Folder must contain a subfolder called "' + manifest.package + '"',
+    });
+    return;
+  }
+
   const installed = await getAppInfo(manifest.package, false);
-  logger.info("installed:", installed);
 
   // Build data for sideload_folder
   const sideloadArgs = {
     local: true,
-    path: args.path,
+    path: apkFile,
     app: {
       packageName: manifest.package,
       installedVersion: installed == null ? -1 : installed.versionCode,
@@ -587,5 +639,9 @@ async function sideLoadLocalFolder(event, args) {
     },
   };
 
-  sideloadFolder(sideloadArgs);
+  event.reply("sideload_local_folder", {
+    success: true,
+  });
+
+  sideloadFolder(null, sideloadArgs);
 }

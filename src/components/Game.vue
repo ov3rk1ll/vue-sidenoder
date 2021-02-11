@@ -28,6 +28,9 @@
             item.installedVersion < item.versionCode
           "
           :disabled="loading"
+          :title="
+            'New: ' + item.versionCode + ', Installed: ' + item.installedVersion
+          "
         >
           Update</b-button
         >

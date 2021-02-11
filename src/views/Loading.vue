@@ -10,31 +10,25 @@
         v-for="item in items"
         :key="item.key"
         :variant="item.loading ? 'default' : item.status ? 'success' : 'danger'"
+        class="d-flex"
       >
         <b-spinner small :class="{ invisible: !item.loading }"></b-spinner>
-        {{ item.text }}
+        <div class="flex-fill">
+          {{ item.text
+          }}<small
+            v-if="item.info && !item.loading && !item.status"
+            v-html="'<br />' + item.info"
+          ></small>
+        </div>
         <b-button
+          size="sm"
           class="float-right"
           v-if="!item.loading && !item.status && item.click"
-          @click="$refs[item.click].click()"
-          >Select {{ item.click }}</b-button
+          @click="pickDepPath(item.click)"
+          >Select {{ item.click.title }}</b-button
         >
       </b-list-group-item>
     </b-list-group>
-
-    <input
-      type="file"
-      ref="adb"
-      style="display: none"
-      @change="onAdbSelected($event)"
-    />
-
-    <input
-      type="file"
-      ref="rclone"
-      style="display: none"
-      @change="onRcloneSelected($event)"
-    />
   </div>
 </template>
 
@@ -63,16 +57,28 @@ export default {
         {
           key: "adb",
           text: "Checking ADB",
+          info:
+            'Download and unzip ADB from <a href="https://developer.android.com/studio/releases/platform-tools" target="_blank">here</a>. Add it to the path or select the location using the button on the right.',
           loading: true,
           status: false,
-          click: "adb",
+          click: {
+            title: "Select ADB",
+            file: "adb",
+            key: "adb.executable",
+          },
         },
         {
           key: "rclone",
           text: "Checking rclone",
+          info:
+            'Download and install Rclone from <a href="https://rclone.org/downloads/" target="_blank">here</a>. Add it to the path or select the location using the button on the right.',
           loading: true,
           status: false,
-          click: "rclone",
+          click: {
+            title: "Select RClone",
+            file: "rclone",
+            key: "rclone.executable",
+          },
         },
       ],
     };
@@ -112,31 +118,15 @@ export default {
 
       if (this.completed && this.success) {
         setTimeout(() => {
-          this.$router.push({ path: "browse" });
+          this.$emit("ready");
         }, 1000);
       }
     },
-    onAdbSelected($event) {
-      const path = $event.target.files[0].path;
-
-      ipcRenderer.once("put_setting", () => {
+    pickDepPath(param) {
+      ipcRenderer.once("pick_dep_path", () => {
         this.runCheck();
       });
-      ipcRenderer.send("put_setting", {
-        key: "adb.executable",
-        value: path,
-      });
-    },
-    onRcloneSelected($event) {
-      const path = $event.target.files[0].path;
-
-      ipcRenderer.once("put_setting", () => {
-        this.runCheck();
-      });
-      ipcRenderer.send("put_setting", {
-        key: "rclone.executable",
-        value: path,
-      });
+      ipcRenderer.send("pick_dep_path", param);
     },
   },
 };
