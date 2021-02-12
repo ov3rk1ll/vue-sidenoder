@@ -121,26 +121,29 @@ export default {
       });
 
       ipcRenderer.on("adb_push", (e, args) => {
+        this.loading = false;
         if (!args.canceled) {
           this.$toast.success("File was copied to device!", {
             pauseOnFocusLoss: false,
             pauseOnHover: true,
           });
-          ipcRenderer.send("adb_dir", { path: this.folder });
+
+          // Reload list
+          this.open({ path: this.folder, isDir: true });
         }
-        this.loading = false;
       });
 
       ipcRenderer.on("adb_remove", (e, args) => {
+        this.loading = false;
         if (!args.canceled) {
           this.$toast.success("File was removed!", {
             pauseOnFocusLoss: false,
             pauseOnHover: true,
           });
 
-          ipcRenderer.send("adb_dir", { path: this.folder });
+          // Reload list
+          this.open({ path: this.folder, isDir: true });
         }
-        this.loading = false;
       });
 
       this.open({ path: "/sdcard", isDir: true });
