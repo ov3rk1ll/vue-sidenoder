@@ -36,7 +36,7 @@
     "electron-settings": "^4.0.2",
     "electron-store": "^7.0.1",
     "flat": "^5.0.2",
-    "mime-types": "^2.1.27",
+    "mime-types": "^2.1.28",
     "node-apk-parser": "^0.2.3",
     "node-fetch": "^2.6.1",
     "open": "^7.4.0",
