@@ -123,7 +123,8 @@ async function sideloadFolder(event, args) {
   globals.win.webContents.send("sideload_folder_progress", { items: tasks });
 
   // Check for connected device
-  const deviceState = await globals.adb.getState(globals.device.id);
+  const deviceState =
+    globals.device && (await globals.adb.getState(globals.device.id));
   logger.debug("deviceState:", deviceState);
   if (!deviceState) {
     updateTask(tasks, "device", true, false, false, "No device connected");

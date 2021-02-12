@@ -31,6 +31,7 @@ import { bind as sideloadBind } from "./sideload";
 import { bind as settingsBind } from "./settings";
 import { RcloneRc } from "./sources/rclone";
 import { LocalFs } from "./sources/local";
+import { Sidequest } from "./sources/sidequest";
 
 depsBind(ipcMain);
 deviceBind(ipcMain);
@@ -38,12 +39,12 @@ mountBind(ipcMain);
 sideloadBind(ipcMain);
 settingsBind(ipcMain);
 
-console.log(settings.getSync("rclone"));
-
 if (settings.getSync("mount") === "rclone") {
   globals.rclone = new RcloneRc(settings.getSync("rclone.mirror"));
 } else if (settings.getSync("mount") === "fs") {
   globals.rclone = new LocalFs(settings.getSync("fs.root"));
+} else if (settings.getSync("mount") === "sidequest") {
+  globals.rclone = new Sidequest();
 } else {
   globals.rclone = null;
 }

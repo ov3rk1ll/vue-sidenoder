@@ -62,7 +62,16 @@ async function list(dir) {
 async function parseList(folder, items, installedApps) {
   const list = [];
   for (const item of items) {
-    if (item.Name.startsWith(".") || !item.IsDir) {
+    if (!item.__parsed && (item.Name.startsWith(".") || !item.IsDir)) {
+      continue;
+    }
+
+    if (item.__parsed) {
+      if (installedApps[item.packageName]) {
+        item.installedVersion = installedApps[item.packageName].versionCode;
+      }
+      list.push(item);
+
       continue;
     }
 
@@ -246,7 +255,7 @@ async function checkFolder(event, args) {
 
   let totalSize = 0;
   for (const file of files) {
-    if (file.IsDir) continue;
+    // if (file.IsDir) continue; // TODO: Does any provider return invalid Size for dir?
     totalSize += file.Size;
   }
 
