@@ -59,6 +59,7 @@ export default {
   },
   methods: {
     onShown() {
+      this.title = "Working...";
       // If we fail on the first step, it is possible that @shown is called
       // after we already set completed to true. So we have to check if we
       // already got an event before setting it here
