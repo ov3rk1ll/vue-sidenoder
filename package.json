@@ -39,7 +39,7 @@
     "mime-types": "^2.1.27",
     "node-apk-parser": "^0.2.3",
     "node-fetch": "^2.6.1",
-    "open": "^7.4.0",
+    "open": "^8.0.2",
     "open-graph-scraper": "^4.7.1",
     "vue": "^2.6.12",
     "vue-router": "^3.5.1",
